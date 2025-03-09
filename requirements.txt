@@ -1,0 +1,5 @@
+alembic==1.15.1
+asyncpg==0.30.0
+fastapi[standard]==0.115.11
+SQLAlchemy==2.0.38
+python-slugify==8.0.4
