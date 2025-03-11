@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from app.schemas import ProductSchema
 from app.backend.db_depends import get_db
 from app.models.products import Product
-from app.models.category import Category
+from app.models.categories import Category
 
 
 router = APIRouter(prefix='/products', tags=['products'])
