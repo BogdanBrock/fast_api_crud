@@ -13,3 +13,11 @@ class ProductSchema(BaseModel):
 class CategorySchema(BaseModel):
     name: str
     parent_id: int | None = None
+
+
+class UserSchema(BaseModel):
+    first_name: str
+    last_name: str
+    username: str
+    email: str
+    password: str

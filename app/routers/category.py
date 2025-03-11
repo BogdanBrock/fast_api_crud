@@ -7,7 +7,7 @@ from slugify import slugify
 
 from app.backend.db_depends import get_db
 from app.schemas import CategorySchema
-from app.models.category import Category
+from app.models.categories import Category
 
 router = APIRouter(prefix='/categories', tags=['category'])
 
