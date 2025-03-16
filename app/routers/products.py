@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from sqlalchemy import insert, select, update
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
 from fastapi import APIRouter, Depends, status, HTTPException
@@ -9,13 +10,17 @@ from app.schemas import ProductSchema
 from app.backend.db_depends import get_db
 from app.models.products import Product
 from app.models.categories import Category
+from app.models.users import User
+from app.routers.permissions import (is_supplier_or_is_admin_permission)
 
 
 router = APIRouter(prefix='/products', tags=['products'])
 
 
 @router.get('/')
-async def all_products(session: Annotated[AsyncSession, Depends(get_db)]):
+async def all_products(
+    session: Annotated[AsyncSession, Depends(get_db)]
+):
     query = select(Product).where(Product.stock > 0)
     products = await session.scalars(query)
     if not products:
@@ -29,7 +34,10 @@ async def all_products(session: Annotated[AsyncSession, Depends(get_db)]):
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    product_schema: ProductSchema
+    product_schema: ProductSchema,
+    user: dict = Depends(
+        is_supplier_or_is_admin_permission
+    )
 ):
     query_category = (
         select(Category).
@@ -47,6 +55,7 @@ async def create_product(
         description=product_schema.description,
         price=product_schema.price,
         image_url=product_schema.image_url,
+        supplier_id=user.get('id'),
         stock=product_schema.stock,
         rating=0.0,
         category_id=product_schema.category
@@ -109,14 +118,26 @@ async def product_detail(
 async def update_product(
     session: Annotated[AsyncSession, Depends(get_db)],
     product_slug: str,
-    product_schema: ProductSchema
+    product_schema: ProductSchema,
+    user: dict = Depends(
+        is_supplier_or_is_admin_permission
+    )
 ):
-    query_get_product = select(Product).where(Product.slug == product_slug)
+    query_get_product = (
+        select(Product).
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
+    )
     product = await session.scalar(query_get_product)
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Product is not found'
+        )
+    if product.user.username != user.get('username'):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Нельзя изменить чужой продукт'
         )
     query_category = (
         select(Category).
@@ -153,15 +174,26 @@ async def update_product(
 @router.delete('/{product_slug}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    product_slug: str
+    product_slug: str,
+    user: dict = Depends(
+        is_supplier_or_is_admin_permission
+    )
 ):
-    query = select(Product).where(Product.slug == product_slug)
+    query = (
+        select(Product).
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
+    )
     product = await session.scalar(query)
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='Product is not found'
         )
+    if product.user.username != user.get('username'):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Нельзя изменить чужой продукт'
+        )
     await session.delete(product)
     await session.commit()
- 

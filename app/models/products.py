@@ -19,3 +19,4 @@ class Product(Base):
     supplier_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     category_id = Column(Integer, ForeignKey('categories.id'))
     category = relationship('Category', back_populates='products')
+    user = relationship('User', back_populates='products')

@@ -8,6 +8,7 @@ from slugify import slugify
 from app.backend.db_depends import get_db
 from app.schemas import CategorySchema
 from app.models.categories import Category
+from app.routers.permissions import (is_admin_permission)
 
 router = APIRouter(prefix='/categories', tags=['category'])
 
@@ -24,7 +25,10 @@ async def get_all_categories(
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_category(
     session: Annotated[AsyncSession, Depends(get_db)],
-    category_schema: CategorySchema
+    category_schema: CategorySchema,
+    user: None | HTTPException = Depends(
+        is_admin_permission
+    )
 ):
     slug = slugify(category_schema.name)
     query = insert(Category).values(
@@ -45,7 +49,10 @@ async def create_category(
 async def update_category(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_slug: str,
-    category_schema: CategorySchema
+    category_schema: CategorySchema,
+    user: None | HTTPException = Depends(
+        is_admin_permission
+    )
 ):
     query = select(Category).where(Category.slug == category_slug)
     category = await session.scalar(query)
@@ -69,7 +76,10 @@ async def update_category(
 @router.delete('/{category_slug}', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
     session: Annotated[AsyncSession, Depends(get_db)],
-    category_slug: str
+    category_slug: str,
+    user: None | HTTPException = Depends(
+        is_admin_permission
+    )
 ):
     query = select(Category).where(Category.slug == category_slug)
     category = await session.scalar(query)
