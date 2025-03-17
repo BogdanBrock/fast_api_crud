@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from app.routers import category, products, auth
+from app.routers import category, products, auth, reviews
 
 app = FastAPI()
 
@@ -13,6 +13,7 @@ async def welcome() -> dict:
 app.include_router(category.router)
 app.include_router(products.router)
 app.include_router(auth.router)
+app.include_router(reviews.router)
 
 
 if __name__ == '__main__':
