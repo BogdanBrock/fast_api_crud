@@ -1,0 +1,17 @@
+version: '3'
+
+volumes:
+  pg_data:
+
+services:
+  db:
+    image: postgres:13.10
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: fastapi123
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+ 

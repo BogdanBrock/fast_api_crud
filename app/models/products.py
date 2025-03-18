@@ -20,3 +20,4 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey('categories.id'))
     category = relationship('Category', back_populates='products')
     user = relationship('User', back_populates='products')
+    reviews = relationship('Review', back_populates='product')

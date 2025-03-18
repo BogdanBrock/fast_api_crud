@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ProductSchema(BaseModel):
@@ -24,4 +24,5 @@ class UserSchema(BaseModel):
 
 
 class ReviewSchema(BaseModel):
-    text: str
+    text: str | None = None
+    grade: int = Field(ge=0, le=10)
