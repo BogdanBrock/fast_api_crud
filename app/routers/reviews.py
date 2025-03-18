@@ -72,7 +72,10 @@ async def create_review(
             detail='Нет такого продукта'
         )
     if product.user.username == user.get('username'):
-        raise ValueError('Нельзя оставить отзыв на свой товар')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Нельзя оставить отзыв на свой товар'
+        )
     await session.execute(
         insert(Review).
         values(**rating_schema.model_dump(),
