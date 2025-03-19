@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.schema import CreateTable
 
 from app.backend.db import Base
@@ -8,11 +8,9 @@ from app.models.products import Product
 
 class Category(Base):
     __tablename__ = 'categories'
-    __table_args__ = {'extend_existing': True}
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    slug = Column(String, unique=True, index=True)
-    is_active = Column(Boolean, default=True)
-    parent_id = Column(Integer, ForeignKey('categories.id'), nullable=True)
+    name: Mapped[str]
+    slug: Mapped[str] = mapped_column(unique=True, index=True)
+    parend_id: Mapped[int | None] = mapped_column(ForeignKey('categories.id'),
+                                                  default=None)
     products = relationship('Product', back_populates='category')
