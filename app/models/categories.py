@@ -1,9 +1,7 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.schema import CreateTable
 
 from app.backend.db import Base
-from app.models.products import Product
 
 
 class Category(Base):
