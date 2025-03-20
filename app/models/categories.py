@@ -9,6 +9,6 @@ class Category(Base):
 
     name: Mapped[str]
     slug: Mapped[str] = mapped_column(unique=True, index=True)
-    parend_id: Mapped[int | None] = mapped_column(ForeignKey('categories.id'),
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey('categories.id'),
                                                   default=None)
     products = relationship('Product', back_populates='category')

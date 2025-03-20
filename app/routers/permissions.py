@@ -3,18 +3,17 @@ from fastapi import Depends, HTTPException, status
 from typing import Annotated
 
 from app.routers.auth import get_current_user
+from app.models.users import RoleEnum
 
 
 async def is_supplier_or_is_admin_permission(
     user: Annotated[dict, Depends(get_current_user)]
 ):
-    supplier_or_admin = any(
-        [user.get(i) for i in ('is_supplier', 'is_admin')]
-    )
-    if not supplier_or_admin:
+    role = user.get('role')
+    if not (role == RoleEnum.IS_SUPPLIER or role == RoleEnum.IS_ADMIN):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Доступ есть только у продавца и админа'
+            detail='Доступ есть только у поставщика и админа'
         )
     return user
 
@@ -22,8 +21,8 @@ async def is_supplier_or_is_admin_permission(
 async def is_admin_permission(
     user: Annotated[dict, Depends(get_current_user)]
 ):
-    admin = user.get('is_admin')
-    if not admin:
+    role = user.get('role')
+    if role != RoleEnum.IS_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Доступ есть только у админа'
