@@ -23,10 +23,11 @@ class Product(Base):
     reviews = relationship('Review', back_populates='product')
 
     @property
-    def rating(self) -> int | None:
+    async def rating(self) -> int | None:
         session: AsyncSession = get_db()
-        rating = session.scalar(
+        rating = await session.scalar(
             select(func.avg(Review.grade)).
             where(Product.id == Review.product_id)
         )
         return int(rating)
+
