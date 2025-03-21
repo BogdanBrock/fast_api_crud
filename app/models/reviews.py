@@ -11,5 +11,6 @@ class Review(Base):
     text: Mapped[str | None] = mapped_column(Text, default=None)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     product_id: Mapped[int] = mapped_column(ForeignKey('products.id'))
+
     user = relationship('User', back_populates='reviews')
     product = relationship('Product', back_populates='reviews')

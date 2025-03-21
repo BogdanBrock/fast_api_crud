@@ -76,7 +76,7 @@ async def update_category(
     category['slug'] = slugify(category.get('name'))
     session.execute(
         update(Category).
-        where(Category.id == category.get('id')).
+        where(Category.slug == category_slug).
         values(**category)
     )
     await session.commit()

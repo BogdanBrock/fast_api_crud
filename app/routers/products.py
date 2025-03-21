@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from sqlalchemy import insert, select, update, or_
+from sqlalchemy import insert, select, update, or_, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
@@ -10,13 +10,20 @@ from app.schemas import ProductSchema
 from app.backend.db_depends import get_db
 from app.models.products import Product
 from app.models.categories import Category
+from app.models.reviews import Review
 from app.routers.permissions import is_supplier_or_is_admin_permission
 
 router = APIRouter(tags=['products'])
 
 
-async def get_object_or_404(session, model, *filters, option=None):
+async def get_object_or_404(session, model, *filters, option=None, annotate=None):
     query = select(model).where(*filters)
+    if annotate:
+        query = (
+            query.add_columns(func.avg(Review.grade).label('rating')).
+            join(Review, Review.product_id == Product.id).
+            group_by(Product)
+        )
     if option:
         query = query.options(joinedload(option))
     obj = await session.scalar(query)

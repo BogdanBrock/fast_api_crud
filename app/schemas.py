@@ -12,20 +12,6 @@ from app.models.users import RoleEnum
 from app.backend.db_depends import get_db
 
 
-class ProductSchema(BaseModel):
-    name: str
-    description: str
-    price: int
-    image_url: str
-    stock: int
-    category_id: int
-
-
-class CategorySchema(BaseModel):
-    name: str
-    parent_id: int | None = None
-
-
 class UserSchema(BaseModel):
     first_name: str
     last_name: str
@@ -64,6 +50,20 @@ class UserSchema(BaseModel):
     #               (User.email == password))
     #     )
     #     return user
+
+
+class ProductSchema(BaseModel):
+    name: str
+    description: str
+    price: int
+    image_url: str
+    stock: int
+    category_id: int
+
+
+class CategorySchema(BaseModel):
+    name: str
+    parent_id: int | None = None
 
 
 class ReviewSchema(BaseModel):

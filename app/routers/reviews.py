@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Body, HTTPException, status
-from sqlalchemy import select, insert, update
+from sqlalchemy import select, insert, update, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -73,15 +73,14 @@ async def create_review(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail='Нельзя оставить отзыв на свой товар'
         )
-    rating = rating_schema.model_dump()
-    rating.update({'user_id': user.get('id'),
+    review = rating_schema.model_dump()
+    review.update({'user_id': user.get('id'),
                    'product_id': product.id})
-    await session.execute(
+    session.execute(
         insert(Review).
-        values(**rating)
+        values(**review)
     )
-    await session.commit()
-    return rating
+    return review
 
 
 @router.put('/products/{product_slug}/reviews/{review_id}/')
@@ -111,6 +110,7 @@ async def update_review(
     review = review_schema.model_dump()
     await session.execute(
         update(Review).
+        where(Review.id == review_id).
         values(**review)
     )
     await session.commit()

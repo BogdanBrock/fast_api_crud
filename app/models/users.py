@@ -23,5 +23,6 @@ class User(Base):
         default=RoleEnum.IS_CUSTOMER,
         server_default=text("'IS_CUSTOMER'")
     )
+
     products = relationship('Product', back_populates='user')
     reviews = relationship('Review', back_populates='user')
