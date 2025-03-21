@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Body, status
 from sqlalchemy import select, insert, update
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import ReviewSchema
@@ -42,9 +43,8 @@ async def get_all_reviews_for_product(
 ):
     product = await get_object_or_404(
         session,
-        # Product,
-        # Product.slug == product_slug,
-        # option=Product.reviews
+        select(Product).
+        where(Product.slug == product_slug)
     )
     return product.reviews
 
@@ -58,7 +58,10 @@ async def create_review(
     product_slug: Annotated[str, Path()]
 ):
     product = await get_object_or_404(
-        session, Product, Product.slug == product_slug, option=Product.user
+        session,
+        select(Product).
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
     )
     validate_owner_cant_rate_own_product(product, user)
     review = rating_schema.model_dump()
@@ -80,7 +83,9 @@ async def update_review(
     review_id: Annotated[int, Path()]
 ):
     get_object_or_404(
-        session, Product, Product.slug == product_slug
+        session,
+        select(Product).
+        where(Product.slug == product_slug)
     )
     review = await get_object_or_404(
         session, Review, Review.id == review_id, option=Review.user
@@ -104,11 +109,16 @@ async def delete_review(
     product_slug: Annotated[str, Path()],
     review_id: Annotated[int, Path()]
 ):
-    await get_object_or_404(
-        session, Product, Product.slug == product_slug
+    get_object_or_404(
+        session,
+        select(Product).
+        where(Product.slug == product_slug)
     )
-    review = await get_object_or_404(
-        session, Review, Review.id == review_id, option=Review.user
+    review = get_object_or_404(
+        session,
+        select(Review).
+        options(joinedload(Review.user)).
+        where(Review.id == review_id)
     )
     validate_owner(review, user)
     await session.delete(review)

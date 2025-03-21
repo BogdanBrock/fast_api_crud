@@ -28,7 +28,9 @@ async def get_category(
     category_slug: str
 ):
     category = await get_object_or_404(
-        session, Category, Category.slug == category_slug
+        session,
+        select(Category).
+        where(Category.slug == category_slug)
     )
     return category
 
@@ -57,7 +59,9 @@ async def update_category(
     category_slug: Annotated[str, Path()]
 ):
     category = await get_object_or_404(
-        session, Category, Category.slug == category_slug
+        session,
+        select(Category).
+        where(Category.slug == category_slug)
     )
     category = category_schema.model_dump()
     category['slug'] = slugify(category.get('name'))
@@ -78,7 +82,9 @@ async def delete_category(
     category_slug: Annotated[str, Path()]
 ):
     category = await get_object_or_404(
-        session, Category, Category.slug == category_slug
+        session,
+        select(Category).
+        where(Category.slug == category_slug)
     )
     await session.delete(category)
     await session.commit()

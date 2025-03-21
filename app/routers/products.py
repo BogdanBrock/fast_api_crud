@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from sqlalchemy import insert, select, update, or_
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
 from fastapi import APIRouter, Depends, Path, Body, status
@@ -31,7 +32,9 @@ async def get_product(
     product_slug: Annotated[str, Path()]
 ):
     product = await get_object_or_404(
-        session, Product, Product.slug == product_slug
+        session,
+        select(Product).
+        where(Product.slug == product_slug)
     )
     return product
 
@@ -42,7 +45,9 @@ async def get_all_products_by_category(
     category_slug: Annotated[str, Path()]
 ):
     category = await get_object_or_404(
-        session, Category, Category.slug == category_slug
+        session,
+        select(Category).
+        where(Category.slug == category_slug)
     )
     products = await session.scalars(
         select(Product).
@@ -61,8 +66,10 @@ async def create_product(
     user: Annotated[dict, Depends(get_current_user)],
     product_schema: Annotated[ProductSchema, Body()]
 ):
-    await get_object_or_404(
-        session, Category, Category.id == product_schema.category_id
+    get_object_or_404(
+        session,
+        select(Category).
+        where(Category.id == product_schema.category_id)
     )
     product = product_schema.model_dump()
     product.update({'slug': slugify(product.get('name')),
@@ -83,11 +90,16 @@ async def update_product(
     product_schema: Annotated[ProductSchema, Body()],
     product_slug: Annotated[str, Path()]
 ):
-    await get_object_or_404(
-        session, Category, Category.id == product_schema.category_id
+    get_object_or_404(
+        session,
+        select(Category).
+        where(Category.id == product_schema.category_id)
     )
     product = await get_object_or_404(
-        session, Product, Product.slug == product_slug, option=Product.user
+        session,
+        select(Product).
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
     )
     validate_owner(product, user)
     product = product_schema.model_dump()
@@ -111,7 +123,10 @@ async def delete_product(
     product_slug: Annotated[str, Path()]
 ):
     product = await get_object_or_404(
-        session, Product, Product.slug == product_slug, option=Product.user
+        session,
+        select(Product).
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
     )
     validate_owner(product, user)
     await session.delete(product)

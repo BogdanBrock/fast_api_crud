@@ -1,7 +1,8 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, select, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
+from app.models.reviews import Review
 
 
 class Product(Base):
@@ -19,3 +20,10 @@ class Product(Base):
     category = relationship('Category', back_populates='products')
     user = relationship('User', back_populates='products')
     reviews = relationship('Review', back_populates='product')
+
+    async def get_rating(self, session):
+        rating = await session.scalar(
+            select(func.avg(Review.grade)).
+            where(Review.product_id == Product.id)
+        )
+        return rating
