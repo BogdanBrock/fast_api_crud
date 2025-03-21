@@ -1,30 +1,17 @@
 from typing import Annotated
 
-from fastapi import APIRouter, status, Depends, Path, Body, HTTPException
+from fastapi import APIRouter, status, Depends, Path, Body
 from sqlalchemy import select, insert, update
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
 
-from app.backend.db_depends import get_db
+from app.core.dependencies import get_db
+from app.core.exceptions import get_object_or_404
+from app.core.permissions import is_admin_permission
 from app.schemas import CategorySchema
 from app.models.categories import Category
-from app.routers.permissions import is_admin_permission
 
 router = APIRouter(prefix='/categories', tags=['category'])
-
-
-async def get_object_or_404(session, model, *filters, option=None):
-    query = select(model).where(*filters)
-    if option:
-        query = query.options(joinedload(option))
-    obj = await session.scalar(query)
-    if not obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'{model.__name__} не найден.'
-        )
-    return obj
 
 
 @router.get('/')
@@ -46,11 +33,11 @@ async def get_category(
     return category
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED,
+             dependencies=(is_admin_permission,))
 async def create_category(
     session: Annotated[AsyncSession, Depends(get_db)],
-    category_schema: Annotated[CategorySchema, Body()],
-    user: Annotated[None, Depends(is_admin_permission)]
+    category_schema: Annotated[CategorySchema, Body()]
 ):
     category = category_schema.model_dump()
     category['slug'] = slugify(category.get('name'))
@@ -62,12 +49,12 @@ async def create_category(
     return category
 
 
-@router.put('/{category_slug}/')
+@router.put('/{category_slug}/',
+            dependencies=(is_admin_permission,))
 async def update_category(
     session: Annotated[AsyncSession, Depends(get_db)],
-    category_slug: Annotated[str, Path()],
-    category_schema: Annotated[CategorySchema, Path()],
-    user: Annotated[None, Depends(is_admin_permission)]
+    category_schema: Annotated[CategorySchema, Body()],
+    category_slug: Annotated[str, Path()]
 ):
     category = await get_object_or_404(
         session, Category, Category.slug == category_slug
@@ -83,11 +70,12 @@ async def update_category(
     return category
 
 
-@router.delete('/{category_slug}/', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{category_slug}/',
+               status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=(is_admin_permission,))
 async def delete_category(
     session: Annotated[AsyncSession, Depends(get_db)],
-    category_slug: Annotated[str, Path()],
-    user: Annotated[None, Depends(is_admin_permission)]
+    category_slug: Annotated[str, Path()]
 ):
     category = await get_object_or_404(
         session, Category, Category.slug == category_slug

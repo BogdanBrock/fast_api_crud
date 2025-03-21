@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, APIRouter
+
 from app.routers import categories, products, auth, reviews
 
 api_router = APIRouter(prefix='/api/v1')

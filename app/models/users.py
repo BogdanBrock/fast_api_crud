@@ -1,14 +1,8 @@
-from enum import Enum
-
-from app.backend.db import Base
+from app.core.db import Base
 from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-
-class RoleEnum(str, Enum):
-    IS_CUSTOMER = 'покупатель'
-    IS_SUPPLIER = 'поставщик'
-    IS_ADMIN = 'администратор'
+from app.core.enums import RoleEnum
 
 
 class User(Base):

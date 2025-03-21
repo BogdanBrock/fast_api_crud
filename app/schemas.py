@@ -8,8 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.users import User
-from app.models.users import RoleEnum
-from app.backend.db_depends import get_db
+from app.core.enums import RoleEnum
+from app.core.dependencies import get_db
 
 
 class UserSchema(BaseModel):

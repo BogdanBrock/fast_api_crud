@@ -1,38 +1,20 @@
 from typing import Annotated
 
-from sqlalchemy import insert, select, update, or_, func
-from sqlalchemy.orm import joinedload
+from sqlalchemy import insert, select, update, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
-from fastapi import APIRouter, Depends, Path, Body, status, HTTPException
+from fastapi import APIRouter, Depends, Path, Body, status
 
+from app.core.dependencies import get_db
+from app.core.exceptions import get_object_or_404
+from app.core.validators import validate_owner
+from app.core.permissions import is_admin_or_is_supplier_permission
 from app.schemas import ProductSchema
-from app.backend.db_depends import get_db
 from app.models.products import Product
 from app.models.categories import Category
-from app.models.reviews import Review
-from app.routers.permissions import is_supplier_or_is_admin_permission
+from app.routers.auth import get_current_user
 
 router = APIRouter(tags=['products'])
-
-
-async def get_object_or_404(session, model, *filters, option=None, annotate=None):
-    query = select(model).where(*filters)
-    if annotate:
-        query = (
-            query.add_columns(func.avg(Review.grade).label('rating')).
-            join(Review, Review.product_id == Product.id).
-            group_by(Product)
-        )
-    if option:
-        query = query.options(joinedload(option))
-    obj = await session.scalar(query)
-    if not obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f'{model.__name__} не найден.'
-        )
-    return obj
 
 
 @router.get('/products/')
@@ -72,11 +54,12 @@ async def get_all_products_by_category(
     return products.all()
 
 
-@router.post('/products/', status_code=status.HTTP_201_CREATED)
+@router.post('/products/', status_code=status.HTTP_201_CREATED,
+             dependencies=(is_admin_or_is_supplier_permission,))
 async def create_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    product_schema: Annotated[ProductSchema, Body()],
-    user: Annotated[dict, Depends(is_supplier_or_is_admin_permission)]
+    user: Annotated[dict, Depends(get_current_user)],
+    product_schema: Annotated[ProductSchema, Body()]
 ):
     await get_object_or_404(
         session, Category, Category.id == product_schema.category_id
@@ -92,12 +75,13 @@ async def create_product(
     return product
 
 
-@router.put('/products/{product_slug}/')
+@router.put('/products/{product_slug}/',
+            dependencies=(is_admin_or_is_supplier_permission,))
 async def update_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    product_slug: Annotated[str, Path()],
-    product_schema: Annotated[ProductSchema, Path()],
-    user: Annotated[dict, Depends(is_supplier_or_is_admin_permission)]
+    user: Annotated[dict, Depends(get_current_user)],
+    product_schema: Annotated[ProductSchema, Body()],
+    product_slug: Annotated[str, Path()]
 ):
     await get_object_or_404(
         session, Category, Category.id == product_schema.category_id
@@ -105,11 +89,7 @@ async def update_product(
     product = await get_object_or_404(
         session, Product, Product.slug == product_slug, option=Product.user
     )
-    if product.user.username != user.get('username'):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Нельзя изменить чужой продукт'
-        )
+    validate_owner(product, user)
     product = product_schema.model_dump()
     product.update({'slug': slugify(product.get('name')),
                     'owner_id': user.get('id')})
@@ -123,19 +103,16 @@ async def update_product(
 
 
 @router.delete('/products/{product_slug}/',
-               status_code=status.HTTP_204_NO_CONTENT)
+               status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=(is_admin_or_is_supplier_permission,))
 async def delete_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    product_slug: Annotated[str, Path()],
-    user: Annotated[dict, Depends(is_supplier_or_is_admin_permission)]
+    user: Annotated[dict, Depends(get_current_user)],
+    product_slug: Annotated[str, Path()]
 ):
     product = await get_object_or_404(
         session, Product, Product.slug == product_slug, option=Product.user
     )
-    if product.user.username != user.get('username'):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Нельзя изменить чужой продукт'
-        )
+    validate_owner(product, user)
     await session.delete(product)
     await session.commit()

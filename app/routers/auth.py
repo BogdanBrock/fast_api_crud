@@ -10,15 +10,13 @@ from passlib.context import CryptContext
 
 from app.models.users import User
 from app.schemas import UserSchema
-from app.backend.db_depends import get_db
-from app.models.users import RoleEnum
+from app.core.dependencies import get_db
+from app.core.enums import RoleEnum
+from app.core.constants import ALGORITHM, SECRET_KEY
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-
-SECRET_KEY = '6d97dfbc72b42506d9e109b58238f9accd67c6ccf25477dbcf76ba2a17d8d573'
-ALGORITHM = 'HS256'
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
@@ -114,6 +112,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     }
 
 
-@router.get('/read_current_user/')
-async def read_current_user(user: dict = Depends(get_current_user)):
-    return {'User': user}
+@router.get('/me/')
+async def get_current_user(user: dict = Depends(get_current_user)):
+    return user
