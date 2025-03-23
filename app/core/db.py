@@ -6,13 +6,12 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine, async_sessionmaker, AsyncSession, AsyncAttrs
 )
 
-engine = create_async_engine(
-    'postgresql+asyncpg://ecommerce:fastapi123@localhost:5432/ecommerce',
-    echo=True
-)
-async_session_maker = async_sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
-)
+from app.config import settings
+
+engine = create_async_engine(settings.db_url, echo=True)
+async_session_maker = async_sessionmaker(engine,
+                                         expire_on_commit=False,
+                                         class_=AsyncSession)
 
 
 class Base(AsyncAttrs, DeclarativeBase):

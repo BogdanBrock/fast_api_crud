@@ -12,7 +12,7 @@ from app.models.users import User
 from app.schemas import UserSchema
 from app.core.dependencies import get_db
 from app.core.enums import RoleEnum
-from app.core.constants import ALGORITHM, SECRET_KEY
+from app.config import settings
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
@@ -89,12 +89,16 @@ async def create_access_token(
             (datetime.now(timezone.utc) + expires_delta).timestamp()
         )
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload,
+                      settings.SECRET_KEY,
+                      algorithm=settings.ALGORITHM)
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
-        payload: dict = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict = jwt.decode(token,
+                                   settings.SECRET_KEY,
+                                   algorithms=[settings.ALGORITHM])
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

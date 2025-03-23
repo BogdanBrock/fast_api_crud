@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Body, Query, status
 from sqlalchemy import select, insert, update
-from sqlalchemy.orm import joinedload, load_only
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import ReviewSchema
