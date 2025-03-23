@@ -23,4 +23,4 @@ is_admin_permission = Depends(
 is_admin_or_is_supplier_permission = Depends(
     RoleChecker((RoleEnum.IS_ADMIN,
                 RoleEnum.IS_SUPPLIER))
-    )
+)

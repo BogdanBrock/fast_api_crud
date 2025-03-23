@@ -9,8 +9,8 @@ from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.permissions import is_admin_permission
 from app.core.constants import CATEGORY_DATA
-from app.schemas import CategorySchema
-from app.models.categories import Category
+from app.schemas.category import CategorySchema
+from app.models.category import Category
 
 router = APIRouter(prefix='/categories', tags=['Category'])
 
@@ -44,6 +44,13 @@ async def create_category(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_schema: Annotated[CategorySchema, Body()]
 ):
+    if category_id := category_schema.parent_id:
+        get_object_or_404(
+            select(Category).
+            where(Category.id == category_id),
+            session,
+            get_scalar=True
+        )
     category = await session.execute(
         insert(Category).
         values(**category_schema.model_dump()).

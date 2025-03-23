@@ -1,13 +1,13 @@
 import uvicorn
 from fastapi import FastAPI, APIRouter
 
-from app.routers import categories, products, auth, reviews
+from app.routers import category, product, auth, review
 
 api_router = APIRouter(prefix='/api/v1')
-api_router.include_router(categories.router)
-api_router.include_router(products.router)
+api_router.include_router(category.router)
+api_router.include_router(product.router)
 api_router.include_router(auth.router)
-api_router.include_router(reviews.router)
+api_router.include_router(review.router)
 
 app = FastAPI()
 app.include_router(api_router)

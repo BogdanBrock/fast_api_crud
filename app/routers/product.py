@@ -10,10 +10,10 @@ from app.core.exceptions import get_object_or_404
 from app.core.validators import validate_owner
 from app.core.permissions import is_admin_or_is_supplier_permission
 from app.core.constants import PRODUCT_DATA
-from app.schemas import ProductSchema
-from app.models.products import Product
-from app.models.categories import Category
-from app.models.users import User
+from app.schemas.product import ProductSchema
+from app.models.product import Product
+from app.models.category import Category
+from app.models.user import User
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix='/products', tags=['Products'])

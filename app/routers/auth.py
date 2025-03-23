@@ -8,8 +8,8 @@ from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
-from app.models.users import User
-from app.schemas import UserSchema
+from app.models.user import User
+from app.schemas.user import UserSchema
 from app.core.dependencies import get_db
 from app.core.enums import RoleEnum
 from app.config import settings

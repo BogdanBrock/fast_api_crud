@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.core.db import Base
-from app.models.reviews import Review
+from app.models.review import Review
 
 
 class Product(Base):

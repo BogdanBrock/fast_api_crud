@@ -5,15 +5,15 @@ from sqlalchemy import select, insert, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas import ReviewSchema
+from app.schemas.review import ReviewSchema
 from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.validators import (validate_owner,
                                  validate_owner_cant_rate_own_product)
 from app.core.constants import REVIEW_DATA
-from app.models.reviews import Review
-from app.models.products import Product
-from app.models.users import User
+from app.models.review import Review
+from app.models.product import Product
+from app.models.user import User
 from app.routers.auth import get_current_user
 
 router = APIRouter(tags=['Reviews'])
