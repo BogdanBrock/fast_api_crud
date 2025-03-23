@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, computed_field
+from slugify import slugify
 
 from app.core.enums import RoleEnum
 
@@ -20,10 +21,18 @@ class ProductSchema(BaseModel):
     stock: int
     category_id: int
 
+    @computed_field
+    def slug(self) -> str:
+        return slugify(self.name)
+
 
 class CategorySchema(BaseModel):
     name: str
     parent_id: int | None = None
+
+    @computed_field
+    def slug(self) -> str:
+        return slugify(self.name)
 
 
 class ReviewSchema(BaseModel):

@@ -113,5 +113,5 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 @router.get('/me/')
-async def get_current_user(user: dict = Depends(get_current_user)):
+async def me(user: dict = Depends(get_current_user)):
     return user

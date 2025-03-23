@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Body, status
+from fastapi import APIRouter, Depends, Path, Body, Query, status
 from sqlalchemy import select, insert, update
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas import ReviewSchema
@@ -10,19 +10,29 @@ from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.validators import (validate_owner,
                                  validate_owner_cant_rate_own_product)
+from app.core.constants import REVIEW_DATA
 from app.models.reviews import Review
 from app.models.products import Product
+from app.models.users import User
 from app.routers.auth import get_current_user
 
-router = APIRouter(tags=['reviews'])
+router = APIRouter(tags=['Reviews'])
 
 
 @router.get('/reviews/')
-async def get_all_reviews(
-    session: Annotated[AsyncSession, Depends(get_db)]
+async def get_reviews(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    product_slug: Annotated[str, Query()] = None
 ):
-    reviews = await session.scalars(select(Review))
-    return reviews.all()
+    if product_slug:
+        product = await session.scalar(
+            select(Product).
+            options(joinedload(Product.reviews).load_only(*REVIEW_DATA)).
+            where(Product.slug == product_slug)
+        )
+        return [] if not product else product.reviews
+    reviews = await session.execute(select(*REVIEW_DATA))
+    return reviews.mappings().all()
 
 
 @router.get('/reviews/{review_id}/')
@@ -31,22 +41,12 @@ async def get_review(
     review_id: Annotated[int, Path()]
 ):
     review = await get_object_or_404(
-        session, Review, Review.id == review_id
+        select(*REVIEW_DATA).
+        where(Review.id == review_id),
+        session,
+        get_mapping=True
     )
     return review
-
-
-@router.get('/products/{product_slug}/reviews/')
-async def get_all_reviews_for_product(
-    session: Annotated[AsyncSession, Depends(get_db)],
-    product_slug: Annotated[str, Path()]
-):
-    product = await get_object_or_404(
-        session,
-        select(Product).
-        where(Product.slug == product_slug)
-    )
-    return product.reviews
 
 
 @router.post('/products/{product_slug}/reviews/',
@@ -58,20 +58,23 @@ async def create_review(
     product_slug: Annotated[str, Path()]
 ):
     product = await get_object_or_404(
-        session,
         select(Product).
-        options(joinedload(Product.user)).
-        where(Product.slug == product_slug)
+        options(joinedload(Product.user).load_only(User.username)).
+        where(Product.slug == product_slug),
+        session,
+        get_scalar=True
     )
     validate_owner_cant_rate_own_product(product, user)
-    review = rating_schema.model_dump()
-    review.update({'user_id': user.get('id'),
-                   'product_id': product.id})
-    session.execute(
+    review_data = rating_schema.model_dump()
+    review_data.update({'user_id': user.get('id'),
+                        'product_id': product.id})
+    review = await session.execute(
         insert(Review).
-        values(**review)
+        values(**review_data).
+        returning(*REVIEW_DATA)
     )
-    return review
+    await session.commit()
+    return review.mappings().first()
 
 
 @router.put('/products/{product_slug}/reviews/{review_id}/')
@@ -83,22 +86,26 @@ async def update_review(
     review_id: Annotated[int, Path()]
 ):
     get_object_or_404(
-        session,
         select(Product).
-        where(Product.slug == product_slug)
+        where(Product.slug == product_slug),
+        session,
+        get_scalar=True
     )
     review = await get_object_or_404(
-        session, Review, Review.id == review_id, option=Review.user
+        select(Review).
+        options(joinedload(Review.user).load_only(User.username)).
+        where(Review.id == review_id),
+        session,
     )
     validate_owner(review, user)
-    review = review_schema.model_dump()
-    await session.execute(
+    review_updated = await session.execute(
         update(Review).
         where(Review.id == review_id).
-        values(**review)
+        values(**review_schema.model_dump()).
+        returning(*REVIEW_DATA)
     )
     await session.commit()
-    return review
+    return review_updated.mappings().first()
 
 
 @router.delete('/products/{product_slug}/reviews/{review_id}/',
@@ -117,7 +124,7 @@ async def delete_review(
     review = get_object_or_404(
         session,
         select(Review).
-        options(joinedload(Review.user)).
+        options(joinedload(Review.user).load_only(User.username)).
         where(Review.id == review_id)
     )
     validate_owner(review, user)

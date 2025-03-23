@@ -12,7 +12,6 @@ api_router.include_router(reviews.router)
 app = FastAPI()
 app.include_router(api_router)
 
-
 if __name__ == '__main__':
     uvicorn.run(
         'app.main:app',
