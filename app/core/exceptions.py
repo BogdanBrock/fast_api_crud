@@ -16,7 +16,8 @@ async def get_object_or_404(
     elif get_mapping:
         result = (await session.execute(query)).mappings().first()
     else:
-        raise ValueError('Необходимо указать get_scalar или get_mapping')
+        raise ValueError('Необходимо поставить флаг True'
+                         'у get_scalar или get_mapping')
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

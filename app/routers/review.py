@@ -7,13 +7,15 @@ from sqlalchemy import select, insert, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import REVIEW_DATA
 from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.validators import (validate_owner,
                                  validate_owner_cant_rate_own_product)
 from app.schemas.review import ReviewSchema
-from app.models import Review, Product, User
+from app.models.review import Review
+from app.models.product import Product
+from app.models.user import User
+from app.core.constants import const
 from app.routers.auth import get_current_user
 
 router = APIRouter(tags=['Reviews'])
@@ -28,11 +30,11 @@ async def get_reviews(
     if product_slug:
         product = await session.scalar(
             select(Product).
-            options(joinedload(Product.reviews).load_only(*REVIEW_DATA)).
+            options(joinedload(Product.reviews).load_only(*const.REVIEW_FIELDS)).
             where(Product.slug == product_slug)
         )
         return [] if not product else product.reviews
-    reviews = await session.execute(select(*REVIEW_DATA))
+    reviews = await session.execute(select(*const.REVIEW_FIELDS))
     return reviews.mappings().all()
 
 
@@ -43,7 +45,7 @@ async def get_review(
 ):
     """Маршрут для получения отзыва."""
     review = await get_object_or_404(
-        select(*REVIEW_DATA).
+        select(*const.REVIEW_FIELDS).
         where(Review.id == review_id),
         session,
         get_mapping=True
@@ -68,13 +70,13 @@ async def create_review(
         get_scalar=True
     )
     validate_owner_cant_rate_own_product(product, user)
-    review_data = rating_schema.model_dump()
-    review_data.update({'user_id': user.get('id'),
-                        'product_id': product.id})
+    review_fields = rating_schema.model_dump()
+    review_fields.update({'user_id': user.get('id'),
+                          'product_id': product.id})
     review = await session.execute(
         insert(Review).
-        values(**review_data).
-        returning(*REVIEW_DATA)
+        values(**review_fields).
+        returning(*review_fields)
     )
     await session.commit()
     return review.mappings().first()
@@ -106,7 +108,7 @@ async def update_review(
         update(Review).
         where(Review.id == review_id).
         values(**review_schema.model_dump()).
-        returning(*REVIEW_DATA)
+        returning(*const.REVIEW_FIELDS)
     )
     await session.commit()
     return review_updated.mappings().first()

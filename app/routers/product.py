@@ -11,10 +11,13 @@ from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.validators import validate_owner
 from app.core.permissions import is_admin_or_is_supplier_permission
-from app.core.constants import PRODUCT_DATA
 from app.schemas.product import ProductSchema
-from app.models import Product, Category, User
+from app.models.category import Category
+from app.models.product import Product
+from app.models.user import User
+
 from app.routers.auth import get_current_user
+from app.core.constants import const
 
 router = APIRouter(prefix='/products', tags=['Products'])
 
@@ -25,7 +28,7 @@ async def get_products(
     category_slug: Annotated[str, Query()] = None
 ):
     """Маршрут для получения всех продуктов или продуктов по категории."""
-    query = select(*PRODUCT_DATA)
+    query = select(*const.PRODUCT_FIELDS)
     if category_slug:
         category_id = await session.scalar(
             select(Category.id).
@@ -47,7 +50,7 @@ async def get_product(
 ):
     """Маршрут для получения продукта."""
     product = await get_object_or_404(
-        select(*PRODUCT_DATA).
+        select(*const.PRODUCT_FIELDS).
         where(Product.slug == product_slug),
         session,
         get_mapping=True
@@ -74,7 +77,7 @@ async def create_product(
     session.add(product)
     await session.commit()
     product_created = await session.execute(
-        select(*PRODUCT_DATA).
+        select(*const.PRODUCT_FIELDS).
         where(Product.id == product.id)
     )
     return product_created.mappings().first()
@@ -107,7 +110,7 @@ async def update_product(
         update(Product).
         where(Product.slug == product_slug).
         values(**product_schema.model_dump()).
-        returning(*PRODUCT_DATA)
+        returning(*const.PRODUCT_FIELDS)
     )
     await session.commit()
     return product_updated.mappings().first()

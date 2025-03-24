@@ -7,10 +7,10 @@ from sqlalchemy import select, insert, update
 from sqlalchemy.orm import load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.constants import const
 from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.permissions import is_admin_permission
-from app.core.constants import CATEGORY_DATA
 from app.schemas.category import CategorySchema
 from app.models.category import Category
 
@@ -22,7 +22,7 @@ async def get_categories(
     session: Annotated[AsyncSession, Depends(get_db)]
 ):
     """Маршрут для получения всех категорий."""
-    categories = await session.execute(select(*CATEGORY_DATA))
+    categories = await session.execute(select(*const.CATEGORY_FIELDS))
     return categories.mappings().all()
 
 
@@ -34,7 +34,7 @@ async def get_category(
     """Маршрут для получения категории."""
     category = await get_object_or_404(
         select(Category).
-        options(load_only(*CATEGORY_DATA)).
+        options(load_only(*const.CATEGORY_FIELDS)).
         where(Category.slug == category_slug),
         session,
         get_scalar=True
@@ -59,7 +59,7 @@ async def create_category(
     category = await session.execute(
         insert(Category).
         values(**category_schema.model_dump()).
-        returning(*CATEGORY_DATA)
+        returning(*const.CATEGORY_FIELDS)
     )
     await session.commit()
     return category.mappings().first()
@@ -83,7 +83,7 @@ async def update_category(
         update(Category).
         where(Category.slug == category_slug).
         values(**category_schema.model_dump()).
-        returning(*CATEGORY_DATA)
+        returning(*const.CATEGORY_FIELDS)
     )
     await session.commit()
     return category_updated.mappings().first()

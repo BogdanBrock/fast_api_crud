@@ -14,5 +14,5 @@ class CategorySchema(BaseModel):
 
     @computed_field
     def slug(self) -> str:
-        """Функция для вычисления поля slug."""
+        """Функция для вычисления поля slug у категории."""
         return slugify(self.name)
