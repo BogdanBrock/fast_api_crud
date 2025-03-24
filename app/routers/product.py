@@ -1,3 +1,5 @@
+"""Модуль для создания маршрутов."""
+
 from typing import Annotated
 
 from sqlalchemy import select, update, or_
@@ -11,9 +13,7 @@ from app.core.validators import validate_owner
 from app.core.permissions import is_admin_or_is_supplier_permission
 from app.core.constants import PRODUCT_DATA
 from app.schemas.product import ProductSchema
-from app.models.product import Product
-from app.models.category import Category
-from app.models.user import User
+from app.models import Product, Category, User
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix='/products', tags=['Products'])
@@ -24,6 +24,7 @@ async def get_products(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_slug: Annotated[str, Query()] = None
 ):
+    """Маршрут для получения всех продуктов или продуктов по категории."""
     query = select(*PRODUCT_DATA)
     if category_slug:
         category_id = await session.scalar(
@@ -44,6 +45,7 @@ async def get_product(
     session: Annotated[AsyncSession, Depends(get_db)],
     product_slug: Annotated[str, Path()]
 ):
+    """Маршрут для получения продукта."""
     product = await get_object_or_404(
         select(*PRODUCT_DATA).
         where(Product.slug == product_slug),
@@ -60,6 +62,7 @@ async def create_product(
     user: Annotated[dict, Depends(get_current_user)],
     product_schema: Annotated[ProductSchema, Body()]
 ):
+    """Маршрут для создания продукта."""
     get_object_or_404(
         select(Category).
         where(Category.id == product_schema.category_id),
@@ -85,6 +88,7 @@ async def update_product(
     product_schema: Annotated[ProductSchema, Body()],
     product_slug: Annotated[str, Path()]
 ):
+    """Маршрут для изменения продукта."""
     get_object_or_404(
         select(Category).
         where(Category.id == product_schema.category_id),
@@ -117,6 +121,7 @@ async def delete_product(
     user: Annotated[dict, Depends(get_current_user)],
     product_slug: Annotated[str, Path()]
 ):
+    """Маршрут для удаления продукта."""
     product = await get_object_or_404(
         select(Product).
         options(joinedload(Product.user).load_only(User.username)).

@@ -1,3 +1,5 @@
+"""Модуль для создания маршрутов."""
+
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -24,6 +26,7 @@ async def create_user(
     session: Annotated[AsyncSession, Depends(get_db)],
     user_schema: UserSchema
 ) -> UserSchema:
+    """Маршрут для регистрации пользователя."""
     user = user_schema.model_dump()
     user['password'] = bcrypt_context.hash(user.get('password'))
     await session.execute(
@@ -39,6 +42,7 @@ async def login(
     session: Annotated[AsyncSession, Depends(get_db)],
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
+    """Маршрут для авторизации пользователя."""
     user = await authenticate_user(
         session,
         form_data.username,
@@ -61,6 +65,7 @@ async def authenticate_user(
     username: str,
     password: str
 ):
+    """Функция для аутентификации пользователя."""
     user = await session.scalar(
         select(User).
         where(User.username == username)
@@ -81,6 +86,7 @@ async def create_access_token(
     role: RoleEnum,
     expires_delta: timedelta
 ):
+    """Функция для создания токена."""
     payload = {
         'id': id,
         'sub': username,
@@ -95,6 +101,7 @@ async def create_access_token(
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    """Функция для получения текущего пользователя."""
     try:
         payload: dict = jwt.decode(token,
                                    settings.SECRET_KEY,
@@ -118,4 +125,5 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
 @router.get('/me/')
 async def me(user: dict = Depends(get_current_user)):
+    """Маршрут для просмотра профиля."""
     return user

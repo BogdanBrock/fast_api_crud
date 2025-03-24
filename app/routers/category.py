@@ -1,3 +1,5 @@
+"""Модуль для создания маршрутов."""
+
 from typing import Annotated
 
 from fastapi import APIRouter, status, Depends, Path, Body
@@ -19,6 +21,7 @@ router = APIRouter(prefix='/categories', tags=['Category'])
 async def get_categories(
     session: Annotated[AsyncSession, Depends(get_db)]
 ):
+    """Маршрут для получения всех категорий."""
     categories = await session.execute(select(*CATEGORY_DATA))
     return categories.mappings().all()
 
@@ -28,6 +31,7 @@ async def get_category(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_slug: str
 ):
+    """Маршрут для получения категории."""
     category = await get_object_or_404(
         select(Category).
         options(load_only(*CATEGORY_DATA)).
@@ -44,6 +48,7 @@ async def create_category(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_schema: Annotated[CategorySchema, Body()]
 ):
+    """Маршрут для создания категории."""
     if category_id := category_schema.parent_id:
         get_object_or_404(
             select(Category).
@@ -67,6 +72,7 @@ async def update_category(
     category_schema: Annotated[CategorySchema, Body()],
     category_slug: Annotated[str, Path()]
 ):
+    """Маршрут для изменения категории."""
     get_object_or_404(
         select(Category).
         where(Category.slug == category_slug),
@@ -90,6 +96,7 @@ async def delete_category(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_slug: Annotated[str, Path()]
 ):
+    """Маршрут для удаления категории."""
     category = await get_object_or_404(
         select(Category).
         where(Category.slug == category_slug),

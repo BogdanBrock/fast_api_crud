@@ -1,3 +1,5 @@
+"""Модуль для создания моделей БД."""
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -5,6 +7,8 @@ from app.core.db import Base
 
 
 class Category(Base):
+    """Модель Category."""
+
     __tablename__ = 'categories'
 
     name: Mapped[str]

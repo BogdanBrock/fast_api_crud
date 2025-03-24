@@ -1,3 +1,5 @@
+"""Модуль для создания базовой модели и фабрики сессий."""
+
 from datetime import datetime
 
 from sqlalchemy import func
@@ -15,6 +17,8 @@ async_session_maker = async_sessionmaker(engine,
 
 
 class Base(AsyncAttrs, DeclarativeBase):
+    """Базовая модель Base."""
+
     __abstract__ = True
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

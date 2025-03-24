@@ -1,3 +1,5 @@
+"""Модуль для создания моделей БД."""
+
 from app.core.db import Base
 from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -6,6 +8,8 @@ from app.core.enums import RoleEnum
 
 
 class User(Base):
+    """Модель User."""
+
     __tablename__ = 'users'
 
     first_name: Mapped[str]

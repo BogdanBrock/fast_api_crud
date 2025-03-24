@@ -1,12 +1,15 @@
+"""Модуль для создания моделей БД."""
+
 from sqlalchemy import ForeignKey, select, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.core.db import Base
-from app.models.review import Review
 
 
 class Product(Base):
+    """Модель Product."""
+
     __tablename__ = 'products'
 
     name: Mapped[str]
@@ -24,6 +27,9 @@ class Product(Base):
 
     @hybrid_property
     def rating(self):
+        """Функция для вычисления поля rating."""
+        from app.models.review import Review
+
         return (select(func.round(func.avg(Review.grade), 1)).
                 where(Review.product_id == Product.id).
                 correlate(Product).

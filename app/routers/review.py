@@ -1,3 +1,5 @@
+"""Модуль для создания маршрутов."""
+
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Body, Query, status
@@ -5,15 +7,13 @@ from sqlalchemy import select, insert, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.review import ReviewSchema
+from app.core.constants import REVIEW_DATA
 from app.core.dependencies import get_db
 from app.core.exceptions import get_object_or_404
 from app.core.validators import (validate_owner,
                                  validate_owner_cant_rate_own_product)
-from app.core.constants import REVIEW_DATA
-from app.models.review import Review
-from app.models.product import Product
-from app.models.user import User
+from app.schemas.review import ReviewSchema
+from app.models import Review, Product, User
 from app.routers.auth import get_current_user
 
 router = APIRouter(tags=['Reviews'])
@@ -24,6 +24,7 @@ async def get_reviews(
     session: Annotated[AsyncSession, Depends(get_db)],
     product_slug: Annotated[str, Query()] = None
 ):
+    """Маршрут для получения всех отзывов или отзывов по продукту."""
     if product_slug:
         product = await session.scalar(
             select(Product).
@@ -40,6 +41,7 @@ async def get_review(
     session: Annotated[AsyncSession, Depends(get_db)],
     review_id: Annotated[int, Path()]
 ):
+    """Маршрут для получения отзыва."""
     review = await get_object_or_404(
         select(*REVIEW_DATA).
         where(Review.id == review_id),
@@ -57,6 +59,7 @@ async def create_review(
     rating_schema: Annotated[ReviewSchema, Body()],
     product_slug: Annotated[str, Path()]
 ):
+    """Маршрут для создания отзыва."""
     product = await get_object_or_404(
         select(Product).
         options(joinedload(Product.user).load_only(User.username)).
@@ -85,6 +88,7 @@ async def update_review(
     product_slug: Annotated[str, Path()],
     review_id: Annotated[int, Path()]
 ):
+    """Маршрут для изменения отзыва."""
     get_object_or_404(
         select(Product).
         where(Product.slug == product_slug),
@@ -116,6 +120,7 @@ async def delete_review(
     product_slug: Annotated[str, Path()],
     review_id: Annotated[int, Path()]
 ):
+    """Маршрут для удаления отзыва."""
     get_object_or_404(
         session,
         select(Product).
