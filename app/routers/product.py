@@ -2,22 +2,18 @@
 
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, Path, Body, Query, status
 from sqlalchemy import select, update, or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, Path, Body, Query, status
 
-from app.core.dependencies import get_db
-from app.core.exceptions import get_object_or_404
-from app.core.validators import validate_owner
-from app.core.permissions import is_admin_or_is_supplier_permission
-from app.schemas.product import ProductSchema
-from app.models.category import Category
-from app.models.product import Product
-from app.models.user import User
-
-from app.routers.auth import get_current_user
 from app.core.constants import const
+from app.core.db import get_db
+from app.core.exceptions import NotFound
+from app.core.permissions import (is_admin_or_supplier_permission,
+                                  has_object_permission)
+from app.schemas.product import ProductSchema
+from app.models import Category, Product, User
 
 router = APIRouter(prefix='/products', tags=['Products'])
 
@@ -49,31 +45,30 @@ async def get_product(
     product_slug: Annotated[str, Path()]
 ):
     """Маршрут для получения продукта."""
-    product = await get_object_or_404(
+    product = await session.execute(
         select(*const.PRODUCT_FIELDS).
-        where(Product.slug == product_slug),
-        session,
-        get_mapping=True
+        where(Product.slug == product_slug)
     )
-    return product
+    if product := product.mappings().first():
+        return product
+    raise NotFound('Такого продукта не существует.')
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED,
-             dependencies=(is_admin_or_is_supplier_permission,))
+@router.post('/', status_code=status.HTTP_201_CREATED,)
 async def create_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[dict, Depends(get_current_user)],
+    user: Annotated[User, is_admin_or_supplier_permission],
     product_schema: Annotated[ProductSchema, Body()]
 ):
     """Маршрут для создания продукта."""
-    get_object_or_404(
+    category = await session.scalar(
         select(Category).
-        where(Category.id == product_schema.category_id),
-        session,
-        get_scalar=True
+        where(Category.id == product_schema.category_id)
     )
+    if not category:
+        raise NotFound('Такой категории не существует.')
     product = Product(**product_schema.model_dump(),
-                      user_id=user.get('id'))
+                      user_id=user.id)
     session.add(product)
     await session.commit()
     product_created = await session.execute(
@@ -83,29 +78,28 @@ async def create_product(
     return product_created.mappings().first()
 
 
-@router.put('/{product_slug}/',
-            dependencies=(is_admin_or_is_supplier_permission,))
+@router.put('/{product_slug}/')
 async def update_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[dict, Depends(get_current_user)],
+    user: Annotated[User, is_admin_or_supplier_permission],
     product_schema: Annotated[ProductSchema, Body()],
     product_slug: Annotated[str, Path()]
 ):
     """Маршрут для изменения продукта."""
-    get_object_or_404(
+    category = await session.scalar(
         select(Category).
-        where(Category.id == product_schema.category_id),
-        session,
-        get_scalar=True
+        where(Category.id == product_schema.category_id)
     )
-    product = await get_object_or_404(
+    if not category:
+        raise NotFound('Такой категории не существует.')
+    product = await session.scalar(
         select(Product).
-        options(joinedload(Product.user).load_only(User.username)).
-        where(Product.slug == product_slug),
-        session,
-        get_scalar=True
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
     )
-    validate_owner(product, user)
+    if not product:
+        raise NotFound('Такого продукта не существует.')
+    has_object_permission(user, product)
     product_updated = await session.execute(
         update(Product).
         where(Product.slug == product_slug).
@@ -117,21 +111,20 @@ async def update_product(
 
 
 @router.delete('/{product_slug}/',
-               status_code=status.HTTP_204_NO_CONTENT,
-               dependencies=(is_admin_or_is_supplier_permission,))
+               status_code=status.HTTP_204_NO_CONTENT,)
 async def delete_product(
     session: Annotated[AsyncSession, Depends(get_db)],
-    user: Annotated[dict, Depends(get_current_user)],
+    user: Annotated[User, is_admin_or_supplier_permission],
     product_slug: Annotated[str, Path()]
 ):
     """Маршрут для удаления продукта."""
-    product = await get_object_or_404(
+    product = await session.scalar(
         select(Product).
-        options(joinedload(Product.user).load_only(User.username)).
-        where(Product.slug == product_slug),
-        session,
-        get_scalar=True
+        options(joinedload(Product.user)).
+        where(Product.slug == product_slug)
     )
-    validate_owner(product, user)
+    if not product:
+        raise NotFound('Такого продукта не существует.')
+    has_object_permission(user, product)
     await session.delete(product)
     await session.commit()

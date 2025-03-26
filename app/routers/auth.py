@@ -12,9 +12,8 @@ from passlib.context import CryptContext
 
 from app.models.user import User
 from app.schemas.user import UserSchema
-from app.core.dependencies import get_db
-from app.core.enums import RoleEnum
-from app.config import settings
+from app.core.db import get_db
+from app.core.config import settings
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
@@ -49,9 +48,7 @@ async def login(
         form_data.password
     )
     token = await create_access_token(
-        user.id,
         user.username,
-        user.role,
         expires_delta=timedelta(minutes=20)
     )
     return {
@@ -60,16 +57,22 @@ async def login(
     }
 
 
+async def get_user(session, username):
+    """Функция для получения пользователя."""
+    user = await session.scalar(
+        select(User).
+        where(User.username == username)
+    )
+    return user
+
+
 async def authenticate_user(
     session: Annotated[AsyncSession, Depends(get_db)],
     username: str,
     password: str
 ):
     """Функция для аутентификации пользователя."""
-    user = await session.scalar(
-        select(User).
-        where(User.username == username)
-    )
+    user = await get_user(session, username)
     is_hashed_password = bcrypt_context.verify(password, user.password)
     if not user or not is_hashed_password:
         raise HTTPException(
@@ -81,16 +84,12 @@ async def authenticate_user(
 
 
 async def create_access_token(
-    id: int,
     username: str,
-    role: RoleEnum,
     expires_delta: timedelta
 ):
     """Функция для создания токена."""
     payload = {
-        'id': id,
         'sub': username,
-        'role': role,
         'exp': int(
             (datetime.now(timezone.utc) + expires_delta).timestamp()
         )
@@ -100,7 +99,10 @@ async def create_access_token(
                       algorithm=settings.ALGORITHM)
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    token: Annotated[str, Depends(oauth2_scheme)]
+):
     """Функция для получения текущего пользователя."""
     try:
         payload: dict = jwt.decode(token,
@@ -116,14 +118,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Недействительный токен'
         )
-    return {
-        'id': payload.get('id'),
-        'username': payload.get('sub'),
-        'role': payload.get('role')
-    }
+    user = await get_user(session, payload.get('sub'))
+    return user
 
 
 @router.get('/me/')
-async def me(user: dict = Depends(get_current_user)):
+async def me(user: User = Depends(get_current_user)):
     """Маршрут для просмотра профиля."""
     return user

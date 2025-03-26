@@ -10,8 +10,8 @@ USER_LAST_NAME_MAX_LENGTH = 64
 USER_EMAIL_MAX_LENGTH = 64
 USER_PASSWORD_MAX_LENGTH = 64
 
-USERNAME_REGEXP = r'^[\w.\-]{0,64}$'
-SLUG_REGEXP = r'^[a-z0-9\-]{0,64}$'
+USERNAME_REGEXP = r'^[\w.\-]{1,64}$'
+SLUG_REGEXP = r'^[a-z0-9\-]{1,64}$'
 
 
 class ModelFields:

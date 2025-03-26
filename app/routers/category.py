@@ -8,8 +8,8 @@ from sqlalchemy.orm import load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import const
-from app.core.dependencies import get_db
-from app.core.exceptions import get_object_or_404
+from app.core.db import get_db
+from app.core.exceptions import NotFound
 from app.core.permissions import is_admin_permission
 from app.schemas.category import CategorySchema
 from app.models.category import Category
@@ -32,13 +32,13 @@ async def get_category(
     category_slug: str
 ):
     """Маршрут для получения категории."""
-    category = await get_object_or_404(
+    category = await session.scalar(
         select(Category).
         options(load_only(*const.CATEGORY_FIELDS)).
-        where(Category.slug == category_slug),
-        session,
-        get_scalar=True
+        where(Category.slug == category_slug)
     )
+    if not category:
+        raise NotFound('Такой категории не существует.')
     return category
 
 
@@ -49,13 +49,13 @@ async def create_category(
     category_schema: Annotated[CategorySchema, Body()]
 ):
     """Маршрут для создания категории."""
-    if category_id := category_schema.parent_id:
-        get_object_or_404(
+    if category_schema.parent_id:
+        category_parent = await session.scalar(
             select(Category).
-            where(Category.id == category_id),
-            session,
-            get_scalar=True
+            where(Category.id == category_schema.parent_id)
         )
+        if not category_parent:
+            raise NotFound('Такой родительской категории не существует.')
     category = await session.execute(
         insert(Category).
         values(**category_schema.model_dump()).
@@ -65,20 +65,19 @@ async def create_category(
     return category.mappings().first()
 
 
-@router.put('/{category_slug}/',
-            dependencies=(is_admin_permission,))
+@router.put('/{category_slug}/', dependencies=(is_admin_permission,))
 async def update_category(
     session: Annotated[AsyncSession, Depends(get_db)],
     category_schema: Annotated[CategorySchema, Body()],
     category_slug: Annotated[str, Path()]
 ):
     """Маршрут для изменения категории."""
-    get_object_or_404(
+    category = await session.scalar(
         select(Category).
-        where(Category.slug == category_slug),
-        session,
-        get_scalar=True
+        where(Category.slug == category_slug)
     )
+    if not category:
+        raise NotFound('Такой категории не существует.')
     category_updated = await session.execute(
         update(Category).
         where(Category.slug == category_slug).
@@ -97,11 +96,11 @@ async def delete_category(
     category_slug: Annotated[str, Path()]
 ):
     """Маршрут для удаления категории."""
-    category = await get_object_or_404(
+    category = await session.scalar(
         select(Category).
-        where(Category.slug == category_slug),
-        session,
-        get_scalar=True
+        where(Category.slug == category_slug)
     )
+    if not category:
+        raise NotFound('Такой категории не существует.')
     await session.delete(category)
     await session.commit()

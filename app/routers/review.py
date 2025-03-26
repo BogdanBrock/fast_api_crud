@@ -7,15 +7,12 @@ from sqlalchemy import select, insert, update
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db
-from app.core.exceptions import get_object_or_404
-from app.core.validators import (validate_owner,
-                                 validate_owner_cant_rate_own_product)
-from app.schemas.review import ReviewSchema
-from app.models.review import Review
-from app.models.product import Product
-from app.models.user import User
 from app.core.constants import const
+from app.core.db import get_db
+from app.core.exceptions import NotFound
+from app.core.permissions import has_object_permission
+from app.models import Review, Product, User
+from app.schemas.review import ReviewSchema
 from app.routers.auth import get_current_user
 
 router = APIRouter(tags=['Reviews'])
@@ -30,7 +27,8 @@ async def get_reviews(
     if product_slug:
         product = await session.scalar(
             select(Product).
-            options(joinedload(Product.reviews).load_only(*const.REVIEW_FIELDS)).
+            options(joinedload(Product.reviews).
+                    load_only(*const.REVIEW_FIELDS)).
             where(Product.slug == product_slug)
         )
         return [] if not product else product.reviews
@@ -44,13 +42,13 @@ async def get_review(
     review_id: Annotated[int, Path()]
 ):
     """Маршрут для получения отзыва."""
-    review = await get_object_or_404(
+    review = await session.execute(
         select(*const.REVIEW_FIELDS).
-        where(Review.id == review_id),
-        session,
-        get_mapping=True
+        where(Review.id == review_id)
     )
-    return review
+    if review := review.mappings().first():
+        return review
+    raise NotFound('Такого отзыва не существует.')
 
 
 @router.post('/products/{product_slug}/reviews/',
@@ -62,21 +60,21 @@ async def create_review(
     product_slug: Annotated[str, Path()]
 ):
     """Маршрут для создания отзыва."""
-    product = await get_object_or_404(
+    product = await session.scalar(
         select(Product).
         options(joinedload(Product.user).load_only(User.username)).
-        where(Product.slug == product_slug),
-        session,
-        get_scalar=True
+        where(Product.slug == product_slug)
     )
-    validate_owner_cant_rate_own_product(product, user)
+    if not product:
+        raise NotFound('Такого продукта не существует.')
+    # ReviewSchema.validate_owner_cant_rate_own_product(product, user)
     review_fields = rating_schema.model_dump()
     review_fields.update({'user_id': user.get('id'),
                           'product_id': product.id})
     review = await session.execute(
         insert(Review).
         values(**review_fields).
-        returning(*review_fields)
+        returning(*const.REVIEW_FIELDS)
     )
     await session.commit()
     return review.mappings().first()
@@ -91,19 +89,20 @@ async def update_review(
     review_id: Annotated[int, Path()]
 ):
     """Маршрут для изменения отзыва."""
-    get_object_or_404(
+    product = await session.scalar(
         select(Product).
-        where(Product.slug == product_slug),
-        session,
-        get_scalar=True
+        where(Product.slug == product_slug)
     )
-    review = await get_object_or_404(
+    if not product:
+        raise NotFound('Такого продукта не существует.')
+    review = await session.scalar(
         select(Review).
-        options(joinedload(Review.user).load_only(User.username)).
-        where(Review.id == review_id),
-        session,
+        options(joinedload(Review.user)).
+        where(Review.id == review_id)
     )
-    validate_owner(review, user)
+    if not review:
+        raise NotFound('Такого отзыва не существует.')
+    has_object_permission(user, review)
     review_updated = await session.execute(
         update(Review).
         where(Review.id == review_id).
@@ -123,17 +122,19 @@ async def delete_review(
     review_id: Annotated[int, Path()]
 ):
     """Маршрут для удаления отзыва."""
-    get_object_or_404(
-        session,
+    product = await session.scalar(
         select(Product).
         where(Product.slug == product_slug)
     )
-    review = get_object_or_404(
-        session,
+    if not product:
+        raise NotFound('Такого продукта не существует.')
+    review = await session.scalar(
         select(Review).
-        options(joinedload(Review.user).load_only(User.username)).
+        options(joinedload(Review.user)).
         where(Review.id == review_id)
     )
-    validate_owner(review, user)
+    if not review:
+        raise NotFound('Такого отзыва не существует.')
+    has_object_permission(user, review)
     await session.delete(review)
     await session.commit()

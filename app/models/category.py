@@ -12,9 +12,8 @@ class Category(Base):
 
     __tablename__ = 'categories'
     __table_args__ = (
-        CheckConstraint('parent_id > 0', name='parent_id_natural_constraint'),
         CheckConstraint(f'slug ~ "{SLUG_REGEXP}"',
-                        name='slug_regexp_constraint')
+                        name='slug_regexp_constraint'),
     )
 
     name: Mapped[str] = mapped_column(String(CATEGORY_NAME_MAX_LENGTH))
