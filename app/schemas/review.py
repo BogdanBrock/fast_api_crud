@@ -3,6 +3,8 @@
 from fastapi import HTTPException, status
 from pydantic import BaseModel, field_validator
 
+from app.models import Review
+
 
 class ReviewSchema(BaseModel):
     """Схема ReviewSchema для валидации данных."""
@@ -18,3 +20,4 @@ class ReviewSchema(BaseModel):
                                 detail='Оценка должна быть от '
                                        '0 и до 10 включительно.')
         return value
+

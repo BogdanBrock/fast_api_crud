@@ -1,14 +1,14 @@
 """Модуль для создания схем."""
 
 from fastapi import HTTPException, status
-from pydantic import BaseModel, HttpUrl, Field, model_validator
+from pydantic import HttpUrl, Field, model_validator, field_validator
 
-from .mixins import SlugMixin
+from .base import AbstractBaseModel
 from app.core.constants import (PRODUCT_NAME_MAX_LENGTH,
                                 PRODUCT_IMAGE_URL_MAX_LENGTH)
 
 
-class ProductSchema(BaseModel, SlugMixin):
+class ProductSchema(AbstractBaseModel):
     """Схема ProductSchema для валидации данных."""
 
     name: str = Field(max_length=PRODUCT_NAME_MAX_LENGTH)
@@ -18,6 +18,11 @@ class ProductSchema(BaseModel, SlugMixin):
     price: float
     stock: int
     category_id: int
+
+    @field_validator('image_url', mode='after')
+    @classmethod
+    def validate_image_url(cls, value) -> str:
+        return str(value)
 
     @model_validator(mode='after')
     def validate(self):

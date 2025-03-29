@@ -1,12 +1,12 @@
 """Модуль для создания схем."""
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from .mixins import SlugMixin
+from .base import AbstractBaseModel
 from app.core.constants import CATEGORY_NAME_MAX_LENGTH
 
 
-class CategorySchema(BaseModel, SlugMixin):
+class CategorySchema(AbstractBaseModel):
     """Схема CategorySchema для валидации данных."""
 
     name: str = Field(max_length=CATEGORY_NAME_MAX_LENGTH)

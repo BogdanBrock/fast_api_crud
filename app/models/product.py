@@ -1,13 +1,15 @@
 """Модуль для создания моделей БД."""
 
-from sqlalchemy import ForeignKey, CheckConstraint, String, Text, select, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import (ForeignKey, CheckConstraint, String,
+                        Text, select, func, Numeric)
+from sqlalchemy.orm import (Mapped, mapped_column, relationship,
+                            column_property, declared_attr)
 
 from app.core.constants import (PRODUCT_NAME_MAX_LENGTH,
                                 SLUG_REGEXP,
                                 PRODUCT_IMAGE_URL_MAX_LENGTH)
 from app.core.db import Base
+from app.models.review import Review
 
 
 class Product(Base):
@@ -36,11 +38,11 @@ class Product(Base):
     user = relationship('User', back_populates='products')
     reviews = relationship('Review', back_populates='product')
 
-    @hybrid_property
-    def rating(self):
-        """Функция для вычисления поля rating."""
-        from app.models import Review
-        return (select(func.round(func.avg(Review.grade), 1)).
-                where(Review.product_id == Product.id).
-                correlate(Product).
-                scalar_subquery())
+    @declared_attr
+    def rating(cls):
+        return column_property(
+            select(func.avg(Review.grade)).
+            where(Review.product_id == cls.id).
+            scalar_subquery().
+            cast(Numeric(3, 1))
+        )

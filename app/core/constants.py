@@ -12,42 +12,4 @@ USER_PASSWORD_MAX_LENGTH = 64
 
 USERNAME_REGEXP = r'^[\w.\-]{1,64}$'
 SLUG_REGEXP = r'^[a-z0-9\-]{1,64}$'
-
-
-class ModelFields:
-    """Класс для импорта полей моделей."""
-
-    @property
-    def CATEGORY_FIELDS(self):
-        """Атрибут для получения полей категории."""
-        from app.models import Category
-        return (Category.id,
-                Category.name,
-                Category.slug,
-                Category.parent_id)
-
-    @property
-    def PRODUCT_FIELDS(self):
-        """Атрибут для получения полей продукта."""
-        from app.models import Product
-        return (Product.id,
-                Product.name,
-                Product.slug,
-                Product.description,
-                Product.price,
-                Product.image_url,
-                Product.stock,
-                Product.rating)
-
-    @property
-    def REVIEW_FIELDS(self):
-        """Атрибут для получения полей отзыва."""
-        from app.models import Review
-        return (Review.id,
-                Review.grade,
-                Review.text,
-                Review.user_id,
-                Review.product_id)
-
-
-const = ModelFields()
+EXPIRATION_TIME = 30

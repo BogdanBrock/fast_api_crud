@@ -2,30 +2,24 @@
 
 from fastapi import Depends
 
+from app.api.exceptions import ForbiddenError
 from app.core.enums import RoleEnum
-from app.core.exceptions import Forbidden
 from app.models import User
-from app.routers.auth import get_current_user
+from app.api.endpoints.user import get_current_user
 
 
 class BasePermission:
     """Базовый класс для создания разрешений."""
 
-    def __init__(self, allowed_roles: tuple[str]) -> None:
+    def __init__(self, allowed_roles: tuple[str, ...]):
         """Магический метод для инициализации атрибутов объекта."""
         self.allowed_roles = allowed_roles
 
     def __call__(self, user: User = Depends(get_current_user)) -> User | None:
         """Магический метод для вызова класса."""
         if user.role not in self.allowed_roles:
-            raise Forbidden('Недостаточно прав для запроса.')
+            raise ForbiddenError('Не достаточно прав для запроса.')
         return user
-
-
-def has_object_permission(user, obj):
-    if not (user.role == RoleEnum.IS_ADMIN or user == obj.user):
-        raise Forbidden('Другой пользователь не может '
-                        'изменять или удалять что-либо')
 
 
 is_admin_permission = Depends(
@@ -35,3 +29,9 @@ is_admin_or_supplier_permission = Depends(
     BasePermission((RoleEnum.IS_ADMIN,
                     RoleEnum.IS_SUPPLIER))
 )
+
+
+async def check_permission_for_user(user, obj_user) -> None:
+    """Разрешение для изменения или удаления только своих данных."""
+    if not (user.role == RoleEnum.IS_ADMIN or user == obj_user):
+        raise ForbiddenError('Нельзя изменять или удалять чужие данные.')
