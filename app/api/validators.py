@@ -40,7 +40,7 @@ async def user_cant_create_review_own_product(user, obj_user) -> None:
 
 
 async def validate_credentials(user: User, is_password_hashed: str) -> None:
-    if not (user and is_password_hashed):
+    if not user and not is_password_hashed:
         raise UnauthorizedError('Не правильные учетные данные')
 
 

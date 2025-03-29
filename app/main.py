@@ -1,17 +1,14 @@
+"""Модуль для создания приложения. Основная точка входа."""
+
 import uvicorn
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 
-from app.api.endpoints import category, product, user
-from app.api.endpoints import review
-
-api_router = APIRouter(prefix='/api/v1')
-api_router.include_router(category.router)
-api_router.include_router(product.router)
-api_router.include_router(user.router)
-api_router.include_router(review.router)
+from app.api.routers import main_router
 
 app = FastAPI()
-app.include_router(api_router)
+
+app.include_router(main_router)
+
 
 if __name__ == '__main__':
     uvicorn.run(

@@ -13,7 +13,7 @@ from app.schemas.product import ProductSchema
 from app.crud import category_crud, product_crud
 from app.models import User
 
-router = APIRouter(prefix='/products', tags=['Products'])
+router = APIRouter()
 
 
 @router.get('/')
@@ -43,7 +43,7 @@ async def get_product(
 @router.post('/', status_code=status.HTTP_201_CREATED,)
 async def create_product(
     product_schema: ProductSchema,
-    user: User = is_admin_or_supplier_permission,
+    user: User = Depends(is_admin_or_supplier_permission),
     session: AsyncSession = Depends(db_session)
 ):
     """Маршрут для создания продукта."""
@@ -60,7 +60,7 @@ async def create_product(
 async def update_product(
     product_slug: str,
     product_schema: ProductSchema,
-    user: User = is_admin_or_supplier_permission,
+    user: User = Depends(is_admin_or_supplier_permission),
     session: AsyncSession = Depends(db_session)
 ):
     """Маршрут для изменения продукта."""
@@ -80,7 +80,7 @@ async def update_product(
 )
 async def delete_product(
     product_slug: str,
-    user: User = is_admin_or_supplier_permission,
+    user: User = Depends(is_admin_or_supplier_permission),
     session: AsyncSession = Depends(db_session),
 ) -> None:
     """Маршрут для удаления продукта."""

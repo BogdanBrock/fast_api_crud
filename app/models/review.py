@@ -1,6 +1,6 @@
 """Модуль для создания моделей БД."""
 
-from sqlalchemy import ForeignKey, CheckConstraint, UniqueConstraint, Text
+from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -10,12 +10,6 @@ class Review(Base):
     """Модель Review."""
 
     __tablename__ = 'reviews'
-    __table_args__ = (
-        CheckConstraint('grade BETWEEN 0 AND 10',
-                        name='grade_range_constraint'),
-        UniqueConstraint('user_id', 'product_id',
-                         name='user_product_unique_together')
-    )
 
     grade: Mapped[int]
     text: Mapped[str | None] = mapped_column(Text, default=None)

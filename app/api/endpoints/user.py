@@ -17,12 +17,15 @@ from app.core.user import (authenticate_user,
 from app.models import User
 from app.schemas.user import UserSchema
 
-router = APIRouter(prefix='/auth', tags=['auth'])
+auth_router = APIRouter()
+user_router = APIRouter()
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@auth_router.post('/registration/', status_code=status.HTTP_201_CREATED,)
 async def create_user(
     user_schema: UserSchema,
     session: AsyncSession = Depends(db_session)
@@ -32,7 +35,7 @@ async def create_user(
     return await user_crud.create(user_schema, session)
 
 
-@router.post('/token/', status_code=status.HTTP_201_CREATED)
+@auth_router.post('/token/', status_code=status.HTTP_201_CREATED)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(db_session)
@@ -51,13 +54,13 @@ async def login(
             'token_type': 'bearer'}
 
 
-@router.get('/me/')
+@user_router.get('/me/')
 async def get_user(user: User = Depends(get_current_user)):
     """Маршрут для просмотра профиля."""
     return user
 
 
-@router.put('/me/')
+@user_router.put('/me/',)
 async def update_user(
     user_schema: UserSchema,
     user: User = Depends(get_current_user),
@@ -67,10 +70,10 @@ async def update_user(
     return await user_crud.update(user, user_schema, session)
 
 
-@router.delete('/me/')
+@user_router.delete('/me/')
 async def delete_user(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(db_session)
-):
+) -> None:
     """Маршрут для удаления профиля."""
     await user_crud.delete(user, session)

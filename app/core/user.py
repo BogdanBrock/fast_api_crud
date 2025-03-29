@@ -1,4 +1,4 @@
-"""Модуль ...."""
+"""Модуль для реализации бизнес-логики пользователя."""
 
 from datetime import datetime, timedelta, timezone
 

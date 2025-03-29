@@ -1,4 +1,4 @@
-"""Модуль для создания миксинов."""
+"""Модуль для абстрактных классов."""
 
 from slugify import slugify
 from pydantic import BaseModel, computed_field

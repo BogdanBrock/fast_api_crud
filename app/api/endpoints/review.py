@@ -14,7 +14,7 @@ from app.api.permissions import check_permission_for_user
 from app.models import User
 from app.schemas.review import ReviewSchema
 
-router = APIRouter(tags=['Reviews'])
+router = APIRouter()
 
 
 @router.get('/reviews/')
@@ -90,7 +90,7 @@ async def delete_review(
     review_id: int,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(db_session),
-):
+) -> None:
     """Маршрут для удаления отзыва."""
     product = await product_crud.get_object_by_slug(product_slug, session)
     await check_product_exists(product)

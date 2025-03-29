@@ -1,12 +1,10 @@
 """Модуль для создания моделей БД."""
 
-from sqlalchemy import (ForeignKey, CheckConstraint, String,
-                        Text, select, func, Numeric)
-from sqlalchemy.orm import (Mapped, mapped_column, relationship,
-                            column_property, declared_attr)
+from sqlalchemy import ForeignKey, String, Text, Numeric, select, func
+from sqlalchemy.orm import (Mapped, declared_attr, mapped_column,
+                            relationship, column_property)
 
 from app.core.constants import (PRODUCT_NAME_MAX_LENGTH,
-                                SLUG_REGEXP,
                                 PRODUCT_IMAGE_URL_MAX_LENGTH)
 from app.core.db import Base
 from app.models.review import Review
@@ -16,12 +14,6 @@ class Product(Base):
     """Модель Product."""
 
     __tablename__ = 'products'
-    __table_args__ = (
-        CheckConstraint('price > 0', name='price_natural_constraint'),
-        CheckConstraint('stock >= 0', name='stock_positive_constraint'),
-        CheckConstraint(f'slug ~ "{SLUG_REGEXP}"',
-                        name='slug_regexp_constraint')
-    )
 
     name: Mapped[str] = mapped_column(String(PRODUCT_NAME_MAX_LENGTH))
     slug: Mapped[str] = mapped_column(unique=True, index=True)

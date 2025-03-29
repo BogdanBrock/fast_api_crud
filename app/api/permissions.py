@@ -11,7 +11,7 @@ from app.api.endpoints.user import get_current_user
 class BasePermission:
     """Базовый класс для создания разрешений."""
 
-    def __init__(self, allowed_roles: tuple[str, ...]):
+    def __init__(self, allowed_roles: tuple[RoleEnum, ...]):
         """Магический метод для инициализации атрибутов объекта."""
         self.allowed_roles = allowed_roles
 
@@ -22,13 +22,9 @@ class BasePermission:
         return user
 
 
-is_admin_permission = Depends(
-    BasePermission((RoleEnum.IS_ADMIN,))
-)
-is_admin_or_supplier_permission = Depends(
-    BasePermission((RoleEnum.IS_ADMIN,
-                    RoleEnum.IS_SUPPLIER))
-)
+is_admin_permission = BasePermission((RoleEnum.IS_ADMIN,))
+is_admin_or_supplier_permission = BasePermission((RoleEnum.IS_ADMIN,
+                                                  RoleEnum.IS_SUPPLIER))
 
 
 async def check_permission_for_user(user, obj_user) -> None:

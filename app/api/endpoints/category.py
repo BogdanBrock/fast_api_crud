@@ -9,7 +9,7 @@ from app.crud.category import category_crud
 from app.core.db import db_session
 from app.schemas.category import CategorySchema
 
-router = APIRouter(prefix='/categories', tags=['Category'])
+router = APIRouter()
 
 
 @router.get('/')
@@ -46,7 +46,7 @@ async def get_category(
     '/',
     status_code=status.HTTP_201_CREATED,
     response_model=CategorySchema,
-    dependencies=(is_admin_permission,)
+    dependencies=(Depends(is_admin_permission),)
 )
 async def create_category(
     category_schema: CategorySchema,
@@ -63,7 +63,7 @@ async def create_category(
 @router.put(
     '/{category_slug}/',
     response_model=CategorySchema,
-    dependencies=(is_admin_permission,)
+    dependencies=(Depends(is_admin_permission),)
 )
 async def update_category(
     category_slug: str,
@@ -80,7 +80,7 @@ async def update_category(
     '/{category_slug}/',
     status_code=status.HTTP_204_NO_CONTENT,
     response_model=None,
-    dependencies=(is_admin_permission,)
+    dependencies=(Depends(is_admin_permission),)
 )
 async def delete_category(
     category_slug: str,
