@@ -44,13 +44,16 @@ class CRUDBase(Generic[ModelType, SchemaType]):
         self,
         schema: SchemaType,
         session: AsyncSession,
-        user: User = None
+        user: User = None,
+        product_slug: str = None
     ) -> ModelType:
         """Метод для создания объекта."""
-        schema_data = schema.model_dump()
+        create_data = schema.model_dump()
         if user:
-            schema_data['user_id'] = user.id
-        model_obj = self.model(**schema_data)
+            create_data['user_username'] = user.username
+        if product_slug:
+            create_data['product_slug'] = product_slug
+        model_obj = self.model(**create_data)
         session.add(model_obj)
         await session.commit()
         await session.refresh(model_obj)
@@ -63,7 +66,7 @@ class CRUDBase(Generic[ModelType, SchemaType]):
         session: AsyncSession
     ) -> ModelType:
         """Метод для изменения объекта."""
-        update_data = schema.model_dump()
+        update_data = schema.model_dump(exclude_unset=True)
         for key in update_data:
             setattr(model_obj, key, update_data[key])
         await session.commit()

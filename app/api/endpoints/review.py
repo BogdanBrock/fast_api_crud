@@ -5,96 +5,87 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.user import get_current_user
 from app.core.db import db_session
-from app.crud import review_crud, product_crud
-from app.api.validators import (check_product_exists,
-                                check_review_exists,
-                                check_object_duplicate,
-                                user_cant_create_review_own_product)
-from app.api.permissions import check_permission_for_user
 from app.models import User
-from app.schemas.review import ReviewSchema
+from app.crud import review_crud
+from app.api.validators import (get_product_or_not_found,
+                                get_review_or_not_found,
+                                check_review_already_exists,
+                                check_cant_review_own_product)
+from app.api.permissions import (RequestContext,
+                                 is_owner_or_admin_permission)
+from app.schemas.review import (ReviewCreateSchema,
+                                ReviewUpdateSchema,
+                                ReviewReadSchema)
 
 router = APIRouter()
 
 
-@router.get('/reviews/')
+@router.get(
+    '/reviews/',
+    response_model=list[ReviewReadSchema]
+)
 async def get_reviews(
     product_slug: str = None,
     session: AsyncSession = Depends(db_session),
 ):
-    """Маршрут для получения всех отзывов или отзывов по продукту."""
-    if product_slug:
-        return await review_crud.get_reviews_by_product(
-            product_slug, session
-        )
-    return await review_crud.get_all(session)
+    """Маршрут для получения всех отзывов или по фильтру продукта."""
+    return await review_crud.get_reviews_by_product_or_all(
+        product_slug,
+        session
+    )
 
 
-@router.get('/reviews/{review_id}/')
+@router.get(
+    '/products/{product_slug}/reviews/{review_id}/',
+    response_model=ReviewReadSchema
+)
 async def get_review(
+    product_slug: str,
     review_id: int,
     session: AsyncSession = Depends(db_session),
 ):
     """Маршрут для получения отзыва."""
-    review = await review_crud.get(review_id, session)
-    await check_review_exists(review)
-    return review
+    await get_product_or_not_found(product_slug, session)
+    return await get_review_or_not_found(review_id, session)
 
 
 @router.post(
     '/products/{product_slug}/reviews/',
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    response_model=ReviewReadSchema
 )
 async def create_review(
     product_slug: str,
-    rating_schema: ReviewSchema,
+    review_schema: ReviewCreateSchema,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(db_session),
 ):
     """Маршрут для создания отзыва."""
-    product = await product_crud.get_product_by_slug_with_user(
-        product_slug, session
-    )
-    await check_product_exists(product)
-    review = await review_crud.get_review_by_product_id_and_user_id(
-        product.id, user.id, session
-    )
-    await user_cant_create_review_own_product(user, product.user)
-    await check_object_duplicate(review)
-    return await review_crud.create(rating_schema, session, user)
+    product = await get_product_or_not_found(product_slug, session)
+    await check_cant_review_own_product(user.username, product.user_username)
+    await check_review_already_exists(product.slug, user.username, session)
+    return await review_crud.create(review_schema, session, user, product_slug)
 
 
-@router.put('/products/{product_slug}/reviews/{review_id}/')
+@router.patch(
+    '/products/{product_slug}/reviews/{review_id}/',
+    response_model=ReviewReadSchema
+)
 async def update_review(
-    product_slug: str,
-    review_id: int,
-    review_schema: ReviewSchema,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(db_session)
+    schema: ReviewUpdateSchema,
+    cxt: RequestContext = Depends(is_owner_or_admin_permission),
 ):
     """Маршрут для изменения отзыва."""
-    product = await product_crud.get_object_by_slug(product_slug, session)
-    await check_product_exists(product)
-    review = await review_crud.get_review_by_id_with_user(review_id, session)
-    await check_review_exists(review)
-    await check_permission_for_user(user, review.user)
-    return await review_crud.update(review, review_schema, session)
+    return await review_crud.update(cxt['model_obj'], schema, cxt['session'])
 
 
 @router.delete(
     '/products/{product_slug}/reviews/{review_id}/',
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None
 )
 async def delete_review(
-    product_slug: str,
-    review_id: int,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(db_session),
-) -> None:
+    cxt: RequestContext = Depends(is_owner_or_admin_permission),
+):
     """Маршрут для удаления отзыва."""
-    product = await product_crud.get_object_by_slug(product_slug, session)
-    await check_product_exists(product)
-    review = await review_crud.get_review_by_id_with_user(review_id, session)
-    await check_review_exists(review)
-    await check_permission_for_user(user, review.user)
-    await review_crud.delete(review, session)
+    await review_crud.delete(cxt['model_obj'], cxt['session'])

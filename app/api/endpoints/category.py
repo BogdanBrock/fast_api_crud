@@ -3,90 +3,82 @@
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.permissions import is_admin_permission
-from app.api.validators import check_category_exists, check_object_duplicate
+from app.api.permissions import RequestContext, is_admin_permission
+from app.api.validators import (get_category_or_not_found,
+                                check_category_already_exists)
 from app.crud.category import category_crud
 from app.core.db import db_session
-from app.schemas.category import CategorySchema
+from app.schemas.category import (CategoryCreateSchema,
+                                  CategoryUpdateSchema,
+                                  CategoryReadSchema)
 
 router = APIRouter()
 
 
-@router.get('/')
+@router.get(
+    '/',
+    response_model=list[CategoryReadSchema]
+)
 async def get_categories(
-    category_slug: str = None,
+    parent_slug: str = None,
     session: AsyncSession = Depends(db_session)
 ):
-    """
-    Маршрут для получения всех категорий.
+    """Маршрут для получения всех категорий. """
 
-    А так же получение подкатегорий, фильтруя по категории.
-    """
-    if category_slug:
-        return await category_crud.get_subcategories_by_category(
-            category_slug, session
-        )
-    return await category_crud.get_all(session)
+    """Так же подкатегорий по фильтру категорий."""
+    return await category_crud.get_subcategories_by_category_or_all(
+        parent_slug,
+        session
+    )
 
 
 @router.get(
-    '/{category_slug}/'
+    '/{category_slug}/',
+    response_model=CategoryReadSchema
 )
 async def get_category(
     category_slug: str,
     session: AsyncSession = Depends(db_session)
 ):
     """Маршрут для получения категории."""
-    category = await category_crud.get_object_by_slug(category_slug, session)
-    await check_category_exists(category)
-    return category
+    return await get_category_or_not_found(category_slug, session)
 
 
 @router.post(
     '/',
     status_code=status.HTTP_201_CREATED,
-    response_model=CategorySchema,
-    dependencies=(Depends(is_admin_permission),)
+    response_model=CategoryReadSchema
 )
 async def create_category(
-    category_schema: CategorySchema,
-    session: AsyncSession = Depends(db_session)
+    schema: CategoryCreateSchema,
+    cxt: RequestContext = Depends(is_admin_permission)
 ):
     """Маршрут для создания категории."""
-    category = await category_crud.get_object_by_slug(
-        category_schema.slug, session
-    )
-    await check_object_duplicate(category)
-    return await category_crud.create(category_schema, session)
+    if schema.parent_slug:
+        await get_category_or_not_found(schema.parent_slug, cxt['session'])
+    await check_category_already_exists(schema.slug, cxt['session'])
+    return await category_crud.create(schema, cxt['session'])
 
 
-@router.put(
+@router.patch(
     '/{category_slug}/',
-    response_model=CategorySchema,
-    dependencies=(Depends(is_admin_permission),)
+    response_model=CategoryReadSchema
 )
 async def update_category(
-    category_slug: str,
-    category_schema: CategorySchema,
-    session: AsyncSession = Depends(db_session),
+    schema: CategoryUpdateSchema,
+    cxt: RequestContext = Depends(is_admin_permission)
 ):
     """Маршрут для изменения категории."""
-    category = await category_crud.get_object_by_slug(category_slug, session)
-    await check_category_exists(category)
-    return await category_crud.update(category, category_schema, session)
+    return await category_crud.update(cxt['model_obj'], schema, cxt['session'])
 
 
 @router.delete(
     '/{category_slug}/',
     status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
-    dependencies=(Depends(is_admin_permission),)
+    response_model=None
 )
 async def delete_category(
-    category_slug: str,
-    session: AsyncSession = Depends(db_session)
-) -> None:
+    cxt: RequestContext = Depends(is_admin_permission)
+):
     """Маршрут для удаления категории."""
-    category = await category_crud.get_object_by_slug(category_slug, session)
-    await check_category_exists(category_slug)
-    await category_crud.delete(category, session)
+    await category_crud.delete(cxt['model_obj'], cxt['session'])

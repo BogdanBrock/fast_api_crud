@@ -1,4 +1,4 @@
-"""Модуль для создания моделей БД."""
+"""Модуль для создания модели Product."""
 
 from sqlalchemy import ForeignKey, String, Text, Numeric, select, func
 from sqlalchemy.orm import (Mapped, declared_attr, mapped_column,
@@ -7,7 +7,6 @@ from sqlalchemy.orm import (Mapped, declared_attr, mapped_column,
 from app.core.constants import (PRODUCT_NAME_MAX_LENGTH,
                                 PRODUCT_IMAGE_URL_MAX_LENGTH)
 from app.core.db import Base
-from app.models.review import Review
 
 
 class Product(Base):
@@ -23,18 +22,30 @@ class Product(Base):
         String(PRODUCT_IMAGE_URL_MAX_LENGTH)
     )
     stock: Mapped[int]
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'))
+    user_username: Mapped[int] = mapped_column(ForeignKey('users.username'))
+    category_slug: Mapped[int] = mapped_column(ForeignKey('categories.slug'))
 
-    category = relationship('Category', back_populates='products')
-    user = relationship('User', back_populates='products')
-    reviews = relationship('Review', back_populates='product')
+    category: Mapped['Category'] = relationship(
+        'Category',
+        back_populates='products'
+    )
+    user: Mapped['User'] = relationship(
+        'User',
+        back_populates='products'
+    )
+    reviews: Mapped[list['Review']] = relationship(
+        'Review',
+        back_populates='product',
+        cascade='all, delete-orphan'
+    )
 
     @declared_attr
     def rating(cls):
+        """Атрибут для вычисления среднего рейтинга у продукта."""
+        from app.models.review import Review
         return column_property(
-            select(func.avg(Review.grade)).
-            where(Review.product_id == cls.id).
+            select(func.coalesce(func.avg(Review.grade), 0)).
+            where(Review.product_slug == cls.slug).
             scalar_subquery().
             cast(Numeric(3, 1))
         )

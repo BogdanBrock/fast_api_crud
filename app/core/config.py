@@ -1,6 +1,6 @@
 """Модуль для настройки переменных окружения"""
 
-import os
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,11 +15,10 @@ class Settings(BaseSettings):
     DB_PORT: int
     SECRET_KEY: str
     ALGORITHM: str
+    TOKEN_EXPIRE: int
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), '.env'
-        )
+        env_file=Path(__file__).parent.parent.parent / '.env'
     )
 
     @property

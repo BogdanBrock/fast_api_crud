@@ -11,10 +11,10 @@ from app.api.endpoints import (category_router,
 main_router = APIRouter(prefix='/api/v1')
 
 main_router.include_router(
-    category_router, prefix='/category', tags=['Category']
+    category_router, prefix='/categories', tags=['Category']
 )
 main_router.include_router(
-    product_router, prefix='/product', tags=['Product']
+    product_router, prefix='/products', tags=['Product']
 )
 main_router.include_router(
     review_router, tags=['Review']

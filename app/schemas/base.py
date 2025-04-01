@@ -4,10 +4,10 @@ from slugify import slugify
 from pydantic import BaseModel, computed_field
 
 
-class AbstractBaseModel(BaseModel):
+class AbstractBaseSchema(BaseModel):
     """Абстрактный класс для наследования."""
 
     @computed_field
-    def slug(self) -> str:
-        """Функция для вычисления поля slug."""
-        return slugify(self.name)
+    def slug(self) -> str | None:
+        """Функция для вычисления slug по имени."""
+        return slugify(self.name) if self.name else None
