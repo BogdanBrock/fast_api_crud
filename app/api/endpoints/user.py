@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
 from app.crud import user_crud
-from app.core.constants import EXPIRATION_TIME
+from app.core.config import settings
 from app.core.db import db_session
 from app.core.user import (authenticate_user,
                            create_access_token,
@@ -31,15 +31,15 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
     response_model=UserReadSchema
 )
 async def create_user(
-    user_schema: UserCreateSchema,
+    schema: UserCreateSchema,
     session: AsyncSession = Depends(db_session)
 ):
     """Маршрут для регистрации пользователя."""
     await check_user_already_exists(
-        user_schema.username, user_schema.email, session
+        schema.username, schema.email, session
     )
-    user_schema = await get_hashed_password(user_schema)
-    return await user_crud.create(user_schema, session)
+    schema = await get_hashed_password(schema)
+    return await user_crud.create(schema, session)
 
 
 @auth_router.post(
@@ -52,11 +52,13 @@ async def login(
 ) -> dict:
     """Маршрут для авторизации пользвателя."""
     user = await authenticate_user(
-        form_data.username, form_data.password, session
+        form_data.username,
+        form_data.password,
+        session
     )
     token = await create_access_token(
         user.username,
-        expires_delta=timedelta(minutes=EXPIRATION_TIME)
+        expires_delta=timedelta(minutes=settings.TOKEN_EXPIRE)
     )
     return {'access_token': token,
             'token_type': 'bearer'}
@@ -73,17 +75,13 @@ async def get_user(user: User = Depends(get_current_user)):
     response_model=UserReadSchema
 )
 async def update_user(
-    user_schema: UserUpdateSchema,
+    schema: UserUpdateSchema,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(db_session)
 ):
     """Маршрут для изменения профиля."""
-    await check_user_already_exists(
-        user_schema.username,
-        user_schema.email,
-        session
-    )
-    return await user_crud.update(user, user_schema, session)
+    await check_user_already_exists(schema.username, schema.email, session)
+    return await user_crud.update(user, schema, session)
 
 
 @user_router.delete(

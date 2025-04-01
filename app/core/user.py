@@ -20,11 +20,11 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
 async def get_hashed_password(
-    user_schema: UserCreateSchema
+    schema: UserCreateSchema
 ) -> UserCreateSchema:
     """Функция для получения закодированного пароля."""
-    hashed_password = bcrypt_context.hash(user_schema.password)
-    return user_schema.model_copy(update={'password': hashed_password})
+    hashed_password = bcrypt_context.hash(schema.password)
+    return schema.model_copy(update={'password': hashed_password})
 
 
 async def authenticate_user(

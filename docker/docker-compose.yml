@@ -6,11 +6,16 @@ volumes:
 services:
   db:
     image: postgres:13.10
-    environment:
-      POSTGRES_DB: ecommerce
-      POSTGRES_USER: ecommerce
-      POSTGRES_PASSWORD: fastapi123
+    env_file: ../.env
     volumes:
       - pg_data:/var/lib/postgresql/data
+
+  app:
+    build: ../
+    env_file: ../.env
+    depends_on:
+      - db
     ports:
-      - 5432:5432
+      - 8000:8000
+
+
