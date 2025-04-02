@@ -8,6 +8,7 @@
 [![Docker](https://img.shields.io/badge/-Docker-464646?style=flat&logo=Docker&logoColor=56C0C0&color=008080)](https://www.docker.com/)
 [![JWT](https://img.shields.io/badge/-JWT-464646?style=flat&logo=JSON-web-tokens&logoColor=56C0C0&color=008080)](https://jwt.io/)
 
+
 ## Описание проекта fast_api_crud
 "fast_api_crud" - это API, где пользователь может просматривать свой профиль, 
 категории, продукты, отзывы на продукты. Пользователь может регистрироваться, 
@@ -40,13 +41,9 @@ cd docker
 docker compose up
 ```
 
-- После того как докер запустился, нужно создать миграции, 
-важно при этом, чтобы был запущен докер с контейнерами:
-```bash
-docker compose exec app alembic revision --autogenerate -m 'Initial migration'
-```
-
-- После создания миграций мы создаем базу данных по команде:
+- После того как докер запустился, нужно создать базу 
+данных, миграции уже созданы, важно при этом, чтобы был 
+запущен докер с контейнерами:
 ```bash
 docker compose exec app alembic upgrade head
 ```
