@@ -84,6 +84,7 @@ async def check_cant_review_own_product(
     current_username: str,
     review_username: ModelType
 ) -> None:
+    """Функция, для проверки создания отзыва на свой продукт."""
     if current_username == review_username:
         raise BadRequestError('Нельзя оставлять отзыв на свой продукт')
 
@@ -102,11 +103,13 @@ async def check_user_already_exists(
 
 
 async def validate_credentials(user: User, is_password_hashed: str) -> None:
+    """Функция для проверки учетных данных."""
     if not user and not is_password_hashed:
         raise UnauthorizedError('Не правильные учетные данные')
 
 
 async def validate_and_decode_token(token: str) -> dict | None:
+    """Функция для проверки токена и его расшифровка."""
     try:
         payload = jwt.decode(
             token,
