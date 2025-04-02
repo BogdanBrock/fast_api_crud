@@ -1,9 +1,9 @@
-"""Модуль для создания схем."""
+"""Модуль для создания схем модели Category."""
 
 from pydantic import BaseModel, Field
 
-from app.schemas import AbstractBaseSchema
 from app.core.constants import CATEGORY_NAME_MAX_LENGTH
+from app.schemas import AbstractBaseSchema
 
 
 class CategoryUpdateSchema(AbstractBaseSchema):

@@ -1,11 +1,13 @@
 """Модуль для создания модели Product."""
 
-from sqlalchemy import ForeignKey, String, Text, Numeric, select, func
-from sqlalchemy.orm import (Mapped, declared_attr, mapped_column,
-                            relationship, column_property)
+from decimal import Decimal
 
-from app.core.constants import (PRODUCT_NAME_MAX_LENGTH,
-                                PRODUCT_IMAGE_URL_MAX_LENGTH)
+from sqlalchemy import ForeignKey, Numeric, String, Text, func, select
+from sqlalchemy.orm import (Mapped, column_property, declared_attr,
+                            mapped_column, relationship)
+
+from app.core.constants import (PRODUCT_IMAGE_URL_MAX_LENGTH,
+                                PRODUCT_NAME_MAX_LENGTH)
 from app.core.db import Base
 
 
@@ -40,7 +42,7 @@ class Product(Base):
     )
 
     @declared_attr
-    def rating(cls):
+    def rating(cls) -> Decimal:
         """Атрибут для вычисления среднего рейтинга у продукта."""
         from app.models.review import Review
         return column_property(
@@ -49,3 +51,8 @@ class Product(Base):
             scalar_subquery().
             cast(Numeric(3, 1))
         )
+
+    @property
+    def is_active(self) -> bool:
+        """Атрибут показывающий наличие продукта."""
+        return self.stock >= 1

@@ -2,16 +2,16 @@
 
 from typing import TypedDict
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import ModelType
-from app.core.db import db_session
+from app.api.endpoints.user import get_current_user
+from app.api.exceptions import ForbiddenError
 from app.api.validators import (get_product_or_not_found,
                                 get_review_or_not_found)
-from app.api.exceptions import ForbiddenError
-from app.models import Product, Review, User, RoleEnum
-from app.api.endpoints.user import get_current_user
+from app.core.db import db_session
+from app.crud import ModelType
+from app.models import Product, Review, RoleEnum, User
 
 
 class RequestContext(TypedDict):

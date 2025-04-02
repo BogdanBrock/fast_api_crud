@@ -1,15 +1,12 @@
 """Модуль для создания базовой модели и фабрики сессий."""
 
+from datetime import datetime
 from typing import AsyncGenerator
 
-from datetime import datetime
-
 from sqlalchemy import func
+from sqlalchemy.ext.asyncio import (AsyncAttrs, AsyncSession,
+                                    async_sessionmaker, create_async_engine)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.ext.asyncio import (create_async_engine,
-                                    async_sessionmaker,
-                                    AsyncSession,
-                                    AsyncAttrs)
 
 from app.core.config import settings
 

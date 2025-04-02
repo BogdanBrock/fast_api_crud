@@ -1,11 +1,11 @@
-"""Модуль для создания схем."""
+"""Модуль для создания схем модели Product."""
 
 
-from pydantic import BaseModel, HttpUrl, Field, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
+from app.core.constants import (PRODUCT_IMAGE_URL_MAX_LENGTH,
+                                PRODUCT_NAME_MAX_LENGTH)
 from app.schemas import AbstractBaseSchema
-from app.core.constants import (PRODUCT_NAME_MAX_LENGTH,
-                                PRODUCT_IMAGE_URL_MAX_LENGTH)
 
 
 class ProductUpdateSchema(AbstractBaseSchema):

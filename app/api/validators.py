@@ -2,21 +2,21 @@
 
 import jwt
 
-from app.api.exceptions import (
-    BadRequestError, UnauthorizedError, NotFoundError
-)
-from app.crud import category_crud, product_crud, review_crud, user_crud
-from app.core.db import AsyncSession
-from app.models import Category, Product, Review, User
-from app.crud.base import ModelType
+from app.api.exceptions import (BadRequestError,
+                                NotFoundError,
+                                UnauthorizedError)
 from app.core.config import settings
+from app.core.db import AsyncSession
+from app.crud import category_crud, product_crud, review_crud, user_crud
+from app.crud.base import ModelType
+from app.models import Category, Product, Review, User
 
 
 async def get_category_or_not_found(
     category_slug: str,
     session: AsyncSession,
 ) -> Category | None:
-    """Функция для проверки существования категории и получения."""
+    """Функция для проверки существования категории и получения категории."""
     category = await category_crud.get_object_by_slug(category_slug, session)
     if not category:
         raise NotFoundError('Такой категории не существует.')
@@ -27,7 +27,7 @@ async def get_product_or_not_found(
     product_slug: str,
     session: AsyncSession
 ) -> Product | None:
-    """Функция для проверки существования продукта и получения."""
+    """Функция для проверки существования продукта и получения продукта."""
     product = await product_crud.get_object_by_slug(product_slug, session)
     if not product:
         raise NotFoundError('Такого продукта не существует.')
@@ -38,7 +38,7 @@ async def get_review_or_not_found(
     review_id: int,
     session: AsyncSession
 ) -> Review | None:
-    """Функция для проверки существования отзыва и получения."""
+    """Функция для проверки существования отзыва и получения отзыва."""
     review = await review_crud.get(review_id, session)
     if not review:
         raise NotFoundError('Такого отзыва не существует.')
@@ -72,7 +72,9 @@ async def check_review_already_exists(
 ) -> Review | None:
     """Функция для проверки уже существующего отзыва."""
     review = await review_crud.get_review_by_product_slug_and_username(
-        product_slug, username, session
+        product_slug,
+        username,
+        session
     )
     if review:
         raise BadRequestError('Вы уже оставили отзыв на этот продукт.')
@@ -107,7 +109,9 @@ async def validate_credentials(user: User, is_password_hashed: str) -> None:
 async def validate_and_decode_token(token: str) -> dict | None:
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
         )
     except jwt.ExpiredSignatureError:
         raise UnauthorizedError('Срок действия токена истек')

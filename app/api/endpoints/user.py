@@ -3,20 +3,21 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import (OAuth2PasswordBearer,
+                              OAuth2PasswordRequestForm)
 from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import user_crud
+from app.api.validators import check_user_already_exists
 from app.core.config import settings
 from app.core.db import db_session
-from app.core.user import (authenticate_user,
-                           create_access_token,
-                           get_current_user,
-                           get_hashed_password)
-from app.api.validators import check_user_already_exists
+from app.core.user import (authenticate_user, create_access_token,
+                           get_current_user, get_hashed_password)
+from app.crud import user_crud
 from app.models import User
-from app.schemas.user import UserCreateSchema, UserUpdateSchema, UserReadSchema
+from app.schemas.user import (UserCreateSchema,
+                              UserReadSchema,
+                              UserUpdateSchema)
 
 auth_router = APIRouter()
 user_router = APIRouter()
@@ -36,7 +37,9 @@ async def create_user(
 ):
     """Маршрут для регистрации пользователя."""
     await check_user_already_exists(
-        schema.username, schema.email, session
+        schema.username,
+        schema.email,
+        session
     )
     schema = await get_hashed_password(schema)
     return await user_crud.create(schema, session)
@@ -49,8 +52,8 @@ async def create_user(
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(db_session)
-) -> dict:
-    """Маршрут для авторизации пользвателя."""
+) -> dict[str, str]:
+    """Маршрут для авторизации пользователя."""
     user = await authenticate_user(
         form_data.username,
         form_data.password,

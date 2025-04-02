@@ -1,7 +1,7 @@
 """Модуль для абстрактных классов."""
 
-from slugify import slugify
 from pydantic import BaseModel, computed_field
+from slugify import slugify
 
 
 class AbstractBaseSchema(BaseModel):

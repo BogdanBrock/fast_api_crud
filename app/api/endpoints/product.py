@@ -3,17 +3,17 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.validators import (get_category_or_not_found,
-                                get_product_or_not_found,
-                                check_product_already_exists)
 from app.api.permissions import (RequestContext,
-                                 is_supplier_owner_or_admin_permission,
-                                 is_supplier_or_admin_permission)
-from app.crud import product_crud
+                                 is_supplier_or_admin_permission,
+                                 is_supplier_owner_or_admin_permission)
+from app.api.validators import (check_product_already_exists,
+                                get_category_or_not_found,
+                                get_product_or_not_found)
 from app.core.db import db_session
+from app.crud import product_crud
 from app.schemas.product import (ProductCreateSchema,
-                                 ProductUpdateSchema,
-                                 ProductReadSchema)
+                                 ProductReadSchema,
+                                 ProductUpdateSchema)
 
 router = APIRouter()
 
@@ -24,11 +24,17 @@ router = APIRouter()
 )
 async def get_products(
     category_slug: str = None,
+    is_active: bool = False,
     session: AsyncSession = Depends(db_session)
 ):
-    """Маршрут для получения всех продуктов или по фильтру категории."""
-    return await product_crud.get_products_by_category_or_all(
+    """
+    Маршрут для получения всех продуктов.
+
+    Так же можно отсортировать по категории или по наличию продуктов.
+    """
+    return await product_crud.get_products_by_category_or_is_active_or_all(
         category_slug,
+        is_active,
         session
     )
 

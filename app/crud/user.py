@@ -1,6 +1,6 @@
 """Модуль для создания CRUD операций для пользователя."""
 
-from sqlalchemy import select, or_
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.base import CRUDBase

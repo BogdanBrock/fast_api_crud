@@ -3,19 +3,19 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.user import get_current_user
-from app.core.db import db_session
-from app.models import User
-from app.crud import review_crud
-from app.api.validators import (get_product_or_not_found,
-                                get_review_or_not_found,
-                                check_review_already_exists,
-                                check_cant_review_own_product)
 from app.api.permissions import (RequestContext,
                                  is_owner_or_admin_permission)
+from app.api.validators import (check_cant_review_own_product,
+                                check_review_already_exists,
+                                get_product_or_not_found,
+                                get_review_or_not_found)
+from app.core.db import db_session
+from app.core.user import get_current_user
+from app.crud import review_crud
+from app.models import User
 from app.schemas.review import (ReviewCreateSchema,
-                                ReviewUpdateSchema,
-                                ReviewReadSchema)
+                                ReviewReadSchema,
+                                ReviewUpdateSchema)
 
 router = APIRouter()
 

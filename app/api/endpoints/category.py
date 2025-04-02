@@ -1,16 +1,16 @@
 """Модуль для создания маршрутов."""
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.permissions import RequestContext, is_admin_permission
-from app.api.validators import (get_category_or_not_found,
-                                check_category_already_exists)
-from app.crud.category import category_crud
+from app.api.validators import (check_category_already_exists,
+                                get_category_or_not_found)
 from app.core.db import db_session
+from app.crud.category import category_crud
 from app.schemas.category import (CategoryCreateSchema,
-                                  CategoryUpdateSchema,
-                                  CategoryReadSchema)
+                                  CategoryReadSchema,
+                                  CategoryUpdateSchema)
 
 router = APIRouter()
 
@@ -23,9 +23,11 @@ async def get_categories(
     parent_slug: str = None,
     session: AsyncSession = Depends(db_session)
 ):
-    """Маршрут для получения всех категорий. """
+    """
+    Маршрут для получения всех категорий.
 
-    """Так же подкатегорий по фильтру категорий."""
+    Так же можно отсортировать подкатегории по категории.
+    """
     return await category_crud.get_subcategories_by_category_or_all(
         parent_slug,
         session

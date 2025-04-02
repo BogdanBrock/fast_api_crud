@@ -5,15 +5,16 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.validators import validate_credentials, validate_and_decode_token
-from app.crud import user_crud
-from app.schemas import UserCreateSchema
-from app.models import User
-from app.core.db import db_session
+from app.api.validators import (validate_and_decode_token,
+                                validate_credentials)
 from app.core.config import settings
+from app.core.db import db_session
+from app.crud import user_crud
+from app.models import User
+from app.schemas import UserCreateSchema
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')

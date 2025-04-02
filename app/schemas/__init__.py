@@ -3,21 +3,21 @@
 from .base import AbstractBaseSchema
 from .category import (
     CategoryCreateSchema,
-    CategoryUpdateSchema,
-    CategoryReadSchema
+    CategoryReadSchema,
+    CategoryUpdateSchema
 )
 from .product import (
     ProductCreateSchema,
-    ProductUpdateSchema,
-    ProductReadSchema
+    ProductReadSchema,
+    ProductUpdateSchema
 )
 from .review import (
     ReviewCreateSchema,
-    ReviewUpdateSchema,
-    ReviewReadSchema
+    ReviewReadSchema,
+    ReviewUpdateSchema
 )
 from .user import (
     UserCreateSchema,
-    UserUpdateSchema,
-    UserReadSchema
+    UserReadSchema,
+    UserUpdateSchema
 )

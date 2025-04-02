@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     @property
     def db_url(self):
-        """Получение пути для работы с БД."""
+        """Подключение к postgresql."""
         return ('postgresql+asyncpg://'
                 f'{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@'
                 f'{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}')

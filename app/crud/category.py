@@ -15,7 +15,11 @@ class CRUDCategory(AbstractCRUDBase):
         parent_slug: str,
         session: AsyncSession,
     ) -> list[Category]:
-        """Метод для получения всех подкатегорий по категории."""
+        """
+        Метод для получения всех категорий.
+
+        Так же можно отсортировать подкатегории по категории.
+        """
         query = select(Category)
         if parent_slug:
             query = query.where(Category.parent_slug == parent_slug)

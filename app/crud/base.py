@@ -1,10 +1,10 @@
 """Модуль для создания базовых CRUD операций."""
 
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
 
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
 from app.core.db import Base
 from app.models import User

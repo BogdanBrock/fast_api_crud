@@ -1,4 +1,4 @@
-"""Модуль для создания схем."""
+"""Модуль для создания схем модели Review."""
 
 from pydantic import BaseModel, Field
 

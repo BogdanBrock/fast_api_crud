@@ -15,7 +15,7 @@ class CRUDReview(CRUDBase):
         product_slug: str,
         session: AsyncSession
     ) -> list[Review]:
-        """Метод для получения всех отзывов по продукту."""
+        """Метод для получения всех отзывов или отзывов по продукту."""
         query = select(Review)
         if product_slug:
             query = query.where(Review.product_slug == product_slug)
