@@ -28,9 +28,9 @@ async def get_products(
     session: AsyncSession = Depends(db_session)
 ):
     """
-    Маршрут для получения всех продуктов.
+    Маршрут для получения всех продуктов по фильтру категории и наличии товара.
 
-    Так же можно отсортировать по категории или по наличию продуктов.
+    Если у категории есть подкатегории, продукты из них тоже будут включены.
     """
     return await product_crud.get_products_by_category_or_is_active_or_all(
         category_slug,
@@ -71,6 +71,7 @@ async def create_product(
     response_model=ProductReadSchema
 )
 async def update_product(
+    product_slug: str,
     schema: ProductUpdateSchema,
     cxt: RequestContext = Depends(is_supplier_owner_or_admin_permission),
 ):
@@ -84,6 +85,7 @@ async def update_product(
     response_model=None
 )
 async def delete_product(
+    product_slug: str,
     cxt: RequestContext = Depends(is_supplier_owner_or_admin_permission),
 ):
     """Маршрут для удаления продукта."""

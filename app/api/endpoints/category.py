@@ -67,6 +67,7 @@ async def create_category(
     response_model=CategoryReadSchema
 )
 async def update_category(
+    category_slug: str,
     schema: CategoryUpdateSchema,
     cxt: RequestContext = Depends(is_admin_permission)
 ):
@@ -80,6 +81,7 @@ async def update_category(
     response_model=None
 )
 async def delete_category(
+    category_slug: str,
     cxt: RequestContext = Depends(is_admin_permission)
 ):
     """Маршрут для удаления категории."""

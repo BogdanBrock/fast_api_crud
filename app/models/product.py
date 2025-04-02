@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import ForeignKey, Numeric, String, Text, func, select
 from sqlalchemy.orm import (Mapped, column_property, declared_attr,
                             mapped_column, relationship)
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.core.constants import (PRODUCT_IMAGE_URL_MAX_LENGTH,
                                 PRODUCT_NAME_MAX_LENGTH)
@@ -52,7 +53,7 @@ class Product(Base):
             cast(Numeric(3, 1))
         )
 
-    @property
+    @hybrid_property
     def is_active(self) -> bool:
         """Атрибут показывающий наличие продукта."""
         return self.stock >= 1

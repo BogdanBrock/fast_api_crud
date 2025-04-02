@@ -35,7 +35,11 @@ async def create_user(
     schema: UserCreateSchema,
     session: AsyncSession = Depends(db_session)
 ):
-    """Маршрут для регистрации пользователя."""
+    """
+    Маршрут для регистрации пользователя.
+
+    Доступны такие роли как: "покупатель", "поставщик", "администратор".
+    """
     await check_user_already_exists(
         schema.username,
         schema.email,

@@ -72,6 +72,8 @@ async def create_review(
     response_model=ReviewReadSchema
 )
 async def update_review(
+    product_slug: str,
+    review_id: int,
     schema: ReviewUpdateSchema,
     cxt: RequestContext = Depends(is_owner_or_admin_permission),
 ):
@@ -85,6 +87,8 @@ async def update_review(
     response_model=None
 )
 async def delete_review(
+    product_slug: str,
+    review_id: int,
     cxt: RequestContext = Depends(is_owner_or_admin_permission),
 ):
     """Маршрут для удаления отзыва."""
