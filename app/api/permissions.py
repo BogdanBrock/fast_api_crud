@@ -34,7 +34,7 @@ class BasePermission:
         session: AsyncSession = Depends(db_session),
         user: User = Depends(get_current_user)
     ) -> RequestContext:
-        """Магический метод для вызова функции."""
+        """Магический метод, который делает объект класса вызываемым."""
         if request.method == 'POST' and await self.has_permission(user):
             return RequestContext(user=user, session=session)
         model_obj = await self.get_object(request.path_params, session)
