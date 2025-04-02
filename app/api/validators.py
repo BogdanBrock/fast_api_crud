@@ -93,7 +93,7 @@ async def check_user_already_exists(
     email: str,
     session: AsyncSession
 ) -> None:
-    """Функция для проверки уже существующего пользователя категории."""
+    """Функция для проверки уже существующего пользователя."""
     data = await user_crud.get_username_and_email(username, email, session)
     if data and username == data.get('username'):
         raise BadRequestError('Такое имя пользователя уже существует.')
