@@ -10,6 +10,7 @@ from app.schemas import AbstractBaseSchema
 
 class ProductUpdateSchema(AbstractBaseSchema):
     """Схема ProductUpdateSchema для валидации и обновления данных."""
+
     name: str = Field(max_length=PRODUCT_NAME_MAX_LENGTH, default=None)
     description: str | None = None
     image_url: HttpUrl | None = Field(max_length=PRODUCT_IMAGE_URL_MAX_LENGTH,
@@ -22,13 +23,6 @@ class ProductUpdateSchema(AbstractBaseSchema):
     def validate_image_url(cls, value) -> str:
         """Метод для преобразования поля image_url в строку."""
         return str(value)
-
-    def model_dump(self, *args, **kwargs):
-        """Метод для создания словаря из модели pydantic."""
-        update_data = super().model_dump(*args, **kwargs)
-        if 'name' not in update_data:
-            del update_data['slug']
-        return update_data
 
 
 class ProductCreateSchema(ProductUpdateSchema):

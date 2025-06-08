@@ -54,7 +54,7 @@ async def get_product(
 @router.post(
     '/',
     status_code=status.HTTP_201_CREATED,
-    response_model=ProductReadSchema,
+    response_model=ProductReadSchema
 )
 async def create_product(
     schema: ProductCreateSchema,

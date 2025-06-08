@@ -29,7 +29,7 @@ class UserCreateSchema(BaseModel):
     username: str = Field(pattern=USER_USERNAME_REGEXP)
     email: EmailStr = Field(max_length=USER_EMAIL_MAX_LENGTH)
     password: str = Field(max_length=USER_PASSWORD_MAX_LENGTH)
-    role: RoleEnum = RoleEnum.IS_CUSTOMER
+    role: RoleEnum = RoleEnum.CUSTOMER
 
 
 class UserReadSchema(BaseModel):

@@ -27,6 +27,34 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
 @auth_router.post(
+    '/token/',
+    status_code=status.HTTP_201_CREATED
+)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(db_session)
+) -> dict[str, str]:
+    """Маршрут для авторизации пользователя."""
+    user = await authenticate_user(
+        form_data.username,
+        form_data.password,
+        session
+    )
+    token = await create_access_token(
+        user.username,
+        expiration_time=settings.TOKEN_EXPIRE
+    )
+    return {'access_token': token,
+            'token_type': 'bearer'}
+
+
+@user_router.get('/me/', response_model=UserReadSchema)
+async def get_user(user: User = Depends(get_current_user)):
+    """Маршрут для просмотра профиля."""
+    return user
+
+
+@user_router.post(
     '/registration/',
     status_code=status.HTTP_201_CREATED,
     response_model=UserReadSchema
@@ -45,36 +73,9 @@ async def create_user(
         schema.email,
         session
     )
-    schema = await get_hashed_password(schema)
+    hashed_password = get_hashed_password(schema.password)
+    schema = schema.model_copy(update={'password': hashed_password})
     return await user_crud.create(schema, session)
-
-
-@auth_router.post(
-    '/token/',
-    status_code=status.HTTP_201_CREATED
-)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(db_session)
-) -> dict[str, str]:
-    """Маршрут для авторизации пользователя."""
-    user = await authenticate_user(
-        form_data.username,
-        form_data.password,
-        session
-    )
-    token = await create_access_token(
-        user.username,
-        expires_delta=timedelta(minutes=settings.TOKEN_EXPIRE)
-    )
-    return {'access_token': token,
-            'token_type': 'bearer'}
-
-
-@user_router.get('/me/', response_model=UserReadSchema)
-async def get_user(user: User = Depends(get_current_user)):
-    """Маршрут для просмотра профиля."""
-    return user
 
 
 @user_router.patch(

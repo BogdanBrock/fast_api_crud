@@ -101,7 +101,7 @@ async def check_user_already_exists(
         raise BadRequestError('Такая почта уже существует.')
 
 
-async def validate_credentials(user: User, is_password_hashed: str) -> None:
+async def validate_credentials(user: User, is_password_hashed: bool) -> None:
     if not user and not is_password_hashed:
         raise UnauthorizedError('Не правильные учетные данные')
 

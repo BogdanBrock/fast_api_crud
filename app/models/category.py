@@ -15,7 +15,10 @@ class Category(Base):
         UniqueConstraint('slug', name='unique_categories_slug'),
     )
 
-    name: Mapped[str] = mapped_column(String(CATEGORY_NAME_MAX_LENGTH))
+    name: Mapped[str] = mapped_column(
+        String(CATEGORY_NAME_MAX_LENGTH),
+        unique=True
+    )
     slug: Mapped[str] = mapped_column(unique=True, index=True)
     parent_slug: Mapped[str | None] = mapped_column(
         ForeignKey('categories.slug'),

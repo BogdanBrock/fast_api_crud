@@ -15,9 +15,9 @@ from app.core.db import Base
 class RoleEnum(str, Enum):
     """Класс RoleEnum для определения роли пользователя."""
 
-    IS_CUSTOMER = 'покупатель'
-    IS_SUPPLIER = 'поставщик'
-    IS_ADMIN = 'администратор'
+    CUSTOMER = 'покупатель'
+    SUPPLIER = 'поставщик'
+    ADMIN = 'администратор'
 
 
 class User(Base):
@@ -34,8 +34,8 @@ class User(Base):
     )
     password: Mapped[str] = mapped_column(String(USER_PASSWORD_MAX_LENGTH))
     role: Mapped[RoleEnum] = mapped_column(
-        default=RoleEnum.IS_CUSTOMER,
-        server_default=text("'IS_CUSTOMER'")
+        default=RoleEnum.CUSTOMER,
+        server_default=text("'CUSTOMER'")
     )
 
     products: Mapped[list['Product']] = relationship(
