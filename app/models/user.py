@@ -40,11 +40,13 @@ class User(Base):
 
     products: Mapped[list['Product']] = relationship(
         'Product',
+        lazy='selectin',
         back_populates='user',
         cascade='all, delete-orphan'
     )
     reviews: Mapped[list['Review']] = relationship(
         'Review',
+        lazy='selectin',
         back_populates='user',
         cascade='all, delete-orphan'
     )

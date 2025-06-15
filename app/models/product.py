@@ -25,19 +25,22 @@ class Product(Base):
         String(PRODUCT_IMAGE_URL_MAX_LENGTH)
     )
     stock: Mapped[int]
-    user_username: Mapped[int] = mapped_column(ForeignKey('users.username'))
-    category_slug: Mapped[int] = mapped_column(ForeignKey('categories.slug'))
+    user_username: Mapped[str] = mapped_column(ForeignKey('users.username'))
+    category_slug: Mapped[str] = mapped_column(ForeignKey('categories.slug'))
 
     category: Mapped['Category'] = relationship(
         'Category',
+        lazy='selectin',
         back_populates='products'
     )
     user: Mapped['User'] = relationship(
         'User',
+        lazy='selectin',
         back_populates='products'
     )
     reviews: Mapped[list['Review']] = relationship(
         'Review',
+        lazy='selectin',
         back_populates='product',
         cascade='all, delete-orphan'
     )

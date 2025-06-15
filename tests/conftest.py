@@ -1,10 +1,10 @@
 """Модуль для создания фикстур."""
 
 from typing import AsyncGenerator
-from httpx import AsyncClient, ASGITransport
 
-
+import pytest
 import pytest_asyncio
+from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -15,7 +15,6 @@ from app.core.db import Base
 from app.main import app
 from app.core.db import db_session
 
-BASE_URL = '/api/v1'
 TEST_DATABASE_URL = 'sqlite+aiosqlite:///:memory:'
 
 test_engine = create_async_engine(TEST_DATABASE_URL, future=True)
@@ -54,8 +53,16 @@ async def override_session(test_db_session):
     app.dependency_overrides[db_session] = mock_get_session
 
 
+@pytest.fixture
+def client():
+    """Фикстура для создания анонимного клиента."""
+    with TestClient(app) as client:
+        yield client
+
+
 pytest_plugins = (
-    'tests.fixtures.categories',
-    'tests.fixtures.products',
-    'tests.fixtures.users'
+    'tests.fixtures.fixture_categories',
+    'tests.fixtures.fixture_products',
+    'tests.fixtures.fixture_reviews',
+    'tests.fixtures.fixture_users'
 )

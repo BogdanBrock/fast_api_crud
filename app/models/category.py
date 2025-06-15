@@ -27,16 +27,19 @@ class Category(Base):
 
     parent_category: Mapped['Category'] = relationship(
         'Category',
+        lazy='selectin',
         back_populates='subcategories',
         remote_side='Category.slug'
     )
     subcategories: Mapped[list['Category']] = relationship(
         'Category',
+        lazy='selectin',
         back_populates='parent_category',
         cascade='all, delete-orphan'
     )
     products: Mapped[list['Product']] = relationship(
         'Product',
+        lazy='selectin',
         back_populates='category',
         cascade='all, delete-orphan'
     )

@@ -23,7 +23,7 @@ def check_db_data(response, expected_data, obj):
     """Функция для проверки значений для БД."""
     request_method = response.request.method
     db_data = {key: getattr(obj, key) for key in expected_data}
-    wrong_data = [k for k in expected_data if expected_data[k] != db_data[k]]
+    wrong_data = {k for k in expected_data if expected_data[k] != db_data[k]}
     assert not wrong_data, (
         f'Проверьте, что при {request_method}-запросе содержатся правильные '
         f'данные в БД в таких полях как: `{"`, `".join(wrong_data)}`'

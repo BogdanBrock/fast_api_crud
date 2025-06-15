@@ -58,7 +58,6 @@ class BasePermission:
     @staticmethod
     async def get_object(params: dict, session: AsyncSession) -> ModelType:
         """Метод для получения объекта модели."""
-        pass
 
 
 class IsAdminPermission(BasePermission):
