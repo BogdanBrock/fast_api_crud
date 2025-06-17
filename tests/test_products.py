@@ -1,33 +1,37 @@
 """Модуль создания тестов для продуктов."""
 
 from http import HTTPStatus
+from decimal import Decimal
 
 import pytest
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pytest_lazy_fixtures import lf
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
-from app.models import Product, User
+from app.models import Product, User, Review
 from .utils import check_json_data, check_db_data, check_db_fields
 from .fixtures.fixture_products import LIST_URL, DETAIL_URL
 
 
-def test_anon_user_can_get_products(client: TestClient):
+async def test_anon_user_can_get_products(client: AsyncClient):
     """Тест для получения продуктов всеми пользователями."""
-    response = client.get(LIST_URL)
+    response = await client.get(LIST_URL)
     assert response.status_code == HTTPStatus.OK
 
 
-def test_anon_user_can_get_product(client: TestClient, product_1: Product):
+async def test_anon_user_can_get_product(
+    client: AsyncClient,
+    product_1: Product
+):
     """Тест для получения продукта всеми пользователями."""
-    response = client.get(DETAIL_URL.format(slug=product_1.slug))
+    response = await client.get(DETAIL_URL.format(slug=product_1.slug))
     assert response.status_code == HTTPStatus.OK
 
 
-def test_product_not_found(client: TestClient):
+async def test_product_not_found(client: AsyncClient):
     """Тест для проверки отсутствия продукта"""
-    response = client.get(DETAIL_URL.format(slug='product'))
+    response = await client.get(DETAIL_URL.format(slug='product'))
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
@@ -39,14 +43,14 @@ def test_product_not_found(client: TestClient):
     )
 )
 async def test_admin_or_supplier_can_create_product(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     user: User,
     product_request: dict,
     product_response: dict
 ):
     """Тест для создания продукта поставщиком и администратором."""
-    response = parametrized_client.post(LIST_URL, json=product_request)
+    response = await parametrized_client.post(LIST_URL, json=product_request)
     assert response.status_code == HTTPStatus.CREATED
     products = (await test_db_session.scalars(select(Product))).all()
     assert len(products) == 1
@@ -64,13 +68,13 @@ async def test_admin_or_supplier_can_create_product(
     )
 )
 async def test_another_users_cant_create_product(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     expected_status: int,
     product_request: dict
 ):
     """Тест для создания продукта анонимным пользователем и покупателем."""
-    response = parametrized_client.post(LIST_URL, json=product_request)
+    response = await parametrized_client.post(LIST_URL, json=product_request)
     assert response.status_code == expected_status
     count = await test_db_session.scalar(
         select(func.count()).select_from(Product)
@@ -83,13 +87,13 @@ async def test_another_users_cant_create_product(
     (lf('supplier_1_client'), lf('admin_client'))
 )
 async def test_supplier_or_admin_can_update_product(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     product_request: dict,
     product_response: dict,
     product_1: Product
 ):
     """Тест для обновления продукта поставщиком и администратором."""
-    response = parametrized_client.patch(
+    response = await parametrized_client.patch(
         DETAIL_URL.format(slug=product_1.slug),
         json=product_request
     )
@@ -106,15 +110,15 @@ async def test_supplier_or_admin_can_update_product(
         (lf('supplier_2_client'), HTTPStatus.FORBIDDEN)
     )
 )
-def test_another_users_cant_update_product(
-    parametrized_client: TestClient,
+async def test_another_users_cant_update_product(
+    parametrized_client: AsyncClient,
     expected_status: int,
     product_request: dict,
     product_1: Product,
     product_fields: tuple[str, ...]
 ):
     """."""
-    response = parametrized_client.patch(
+    response = await parametrized_client.patch(
         DETAIL_URL.format(slug=product_1.slug),
         json=product_request
     )
@@ -128,12 +132,12 @@ def test_another_users_cant_update_product(
     (lf('supplier_1_client'), lf('admin_client'))
 )
 async def test_supplier_or_admin_delete_product(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     product_1: Product
 ):
     """Тест для удаления продукта поставщиком и администратором."""
-    response = parametrized_client.delete(
+    response = await parametrized_client.delete(
         DETAIL_URL.format(slug=product_1.slug)
     )
     assert response.status_code == HTTPStatus.NO_CONTENT
@@ -152,13 +156,13 @@ async def test_supplier_or_admin_delete_product(
     )
 )
 async def test_another_users_cant_delete_product(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     expected_status: int,
     product_1: Product
 ):
     """Тест для удаления продукта анонимным пользователем и покупателем."""
-    response = parametrized_client.delete(
+    response = await parametrized_client.delete(
         DETAIL_URL.format(slug=product_1.slug)
     )
     assert response.status_code == expected_status
@@ -171,3 +175,15 @@ async def test_another_users_cant_delete_product(
 def test_model_product(product_fields: tuple[str, ...]):
     """Тест для модели продукта."""
     check_db_fields(product_fields, Product)
+
+
+async def test_product_have_average_grade(
+    test_db_session,
+    product_1: Product,
+    review_1: Review,
+    review_3: Review
+):
+    await test_db_session.refresh(product_1)
+    grade_1 = Decimal(str(review_1.grade))
+    grade_2 = Decimal(str(review_3.grade))
+    assert product_1.rating == (grade_1 + grade_2) / Decimal(str(2))

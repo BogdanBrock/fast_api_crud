@@ -5,6 +5,7 @@ from http import HTTPStatus
 import pytest
 from pytest_lazy_fixtures import lf
 from sqlalchemy import select, func
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.testclient import TestClient
 
@@ -13,48 +14,48 @@ from .utils import check_json_data, check_db_data, check_db_fields
 from .fixtures.fixture_categories import LIST_URL, DETAIL_URL
 
 
-def test_anon_user_can_get_categories(client: TestClient):
+async def test_anon_user_can_get_categories(client: AsyncClient):
     """Тест для получения категории для анонимного пользователя."""
-    response = client.get(LIST_URL)
+    response = await client.get(LIST_URL)
     assert response.status_code == HTTPStatus.OK, response.json()
 
 
 @pytest.mark.usefixtures('category_1', 'category_2')
 async def test_anon_user_can_get_categories_by_parent_slug(
-    client: TestClient,
+    client: AsyncClient,
     parent_category: Category
 ):
     """Тест для получения категорий по родительской категории."""
     params = {'parent_slug': parent_category.slug}
-    response = client.get(LIST_URL, params=params)
+    response = await client.get(LIST_URL, params=params)
     data = response.json()
     assert response.status_code == HTTPStatus.OK, response.json()
     assert len(data) == 2
 
 
-def test_anon_user_can_get_category(
-    client: TestClient,
+async def test_anon_user_can_get_category(
+    client: AsyncClient,
     parent_category: Category
 ):
     """Тест для получения категории для анонимного пользователя."""
-    response = client.get(DETAIL_URL.format(slug=parent_category.slug))
+    response = await client.get(DETAIL_URL.format(slug=parent_category.slug))
     assert response.status_code == HTTPStatus.OK, response.json()
 
 
-def test_category_not_found(client: TestClient):
+async def test_category_not_found(client: AsyncClient):
     """Тест для проверки отсутствия категории."""
-    response = client.get(DETAIL_URL.format(slug='category'))
+    response = await client.get(DETAIL_URL.format(slug='category'))
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 async def test_admin_can_create_category(
-    admin_client: TestClient,
+    admin_client: AsyncClient,
     test_db_session: AsyncSession,
     category_request: dict,
     category_response: dict
 ):
     """Тест для создания категории администратором."""
-    response = admin_client.post(LIST_URL, json=category_request)
+    response = await admin_client.post(LIST_URL, json=category_request)
     assert response.status_code == HTTPStatus.CREATED, response.json()
     categories = (await test_db_session.scalars(select(Category))).all()
     assert len(categories) == 1
@@ -65,12 +66,12 @@ async def test_admin_can_create_category(
 
 @pytest.mark.usefixtures('parent_category')
 async def test_admin_cant_create_category_one_more(
-    admin_client: TestClient,
+    admin_client: AsyncClient,
     test_db_session: AsyncSession,
     category_request: dict
 ):
     """Тест для создания уже существующей категории."""
-    response = admin_client.post(LIST_URL, json=category_request)
+    response = await admin_client.post(LIST_URL, json=category_request)
     assert response.status_code == HTTPStatus.BAD_REQUEST
     count = await test_db_session.scalar(
         select(func.count()).select_from(Category)
@@ -87,7 +88,7 @@ async def test_admin_cant_create_category_one_more(
     )
 )
 async def test_another_users_cant_create_category(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     expected_status: int,
     test_db_session: AsyncSession,
     category_request: dict
@@ -96,7 +97,7 @@ async def test_another_users_cant_create_category(
     Тест для создания категории анонимным
     пользователем, покупателем и поставщиком товаром.
     """
-    response = parametrized_client.post(LIST_URL, json=category_request)
+    response = await parametrized_client.post(LIST_URL, json=category_request)
     assert response.status_code == expected_status
     count = await test_db_session.scalar(
         select(func.count()).select_from(Category)
@@ -104,15 +105,15 @@ async def test_another_users_cant_create_category(
     assert count == 0
 
 
-def test_admin_can_update_category(
+async def test_admin_can_update_category(
     admin_client: TestClient,
     parent_category: Category,
     category_request: dict,
     category_response: dict
 ):
     """Тест для изменения категории администратором."""
-    response = admin_client.patch(
-        DETAIL_URL.format(slug=parent_category.slug),
+    response = await admin_client.patch(
+        DETAIL_URL.format(slug=category_response['slug']),
         json=category_request
     )
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -128,8 +129,8 @@ def test_admin_can_update_category(
         (lf('supplier_1_client'), HTTPStatus.FORBIDDEN)
     )
 )
-def test_another_user_cant_update_category(
-    parametrized_client: TestClient,
+async def test_another_user_cant_update_category(
+    parametrized_client: AsyncClient,
     expected_status: int,
     parent_category: Category,
     category_request: dict,
@@ -139,7 +140,7 @@ def test_another_user_cant_update_category(
     Тест для изменения категории анонимым
     пользователем, покупателем и поставщиком товаров.
     """
-    response = parametrized_client.patch(
+    response = await parametrized_client.patch(
         DETAIL_URL.format(slug=parent_category.slug),
         json=category_request
     )
@@ -158,14 +159,14 @@ def test_another_user_cant_update_category(
     )
 )
 async def test_users_delete_category(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     expected_status: int,
     expected_count: int,
     test_db_session: AsyncSession,
     parent_category: Category
 ):
     """Тест для удалении категории всеми пользователями."""
-    response = parametrized_client.delete(
+    response = await parametrized_client.delete(
         DETAIL_URL.format(slug=parent_category.slug)
     )
     assert response.status_code == expected_status

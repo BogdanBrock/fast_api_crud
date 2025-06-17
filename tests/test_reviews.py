@@ -6,29 +6,29 @@ import pytest
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pytest_lazy_fixtures import lf
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 from app.models import Review, Product, User
 from .fixtures.fixture_reviews import CREATE_URL, DETAIL_URL
 from .utils import check_json_data, check_db_data, check_db_fields
 
 
-def test_anon_user_can_get_reviews(client: TestClient):
-    response = client.get('api/v1/reviews/')
+async def test_anon_user_can_get_reviews(client: AsyncClient):
+    response = await client.get('api/v1/reviews/')
     assert response.status_code == HTTPStatus.OK, response.json()
 
 
-async def test_anon_user_can_get_review(client: TestClient, review_1: Review):
-    response = client.get(DETAIL_URL.format(
+async def test_anon_user_can_get_review(client: AsyncClient, review_1: Review):
+    response = await client.get(DETAIL_URL.format(
         slug=review_1.product.slug,
         id=review_1.id
     ))
     assert response.status_code == HTTPStatus.OK, response.json()
 
 
-async def test_review_not_found(client: TestClient):
+async def test_review_not_found(client: AsyncClient):
     """Тест для проверки отсутствия отзыва."""
-    response = client.get(DETAIL_URL.format(slug='product', id=1))
+    response = await client.get(DETAIL_URL.format(slug='product', id=1))
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
@@ -41,13 +41,13 @@ async def test_review_not_found(client: TestClient):
     )
 )
 async def test_users_can_create_review(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     user: User,
     product_2: Product,
     data: dict,
 ):
-    response = parametrized_client.post(
+    response = await parametrized_client.post(
         CREATE_URL.format(slug=product_2.slug),
         json=data
     )
@@ -69,11 +69,11 @@ async def test_users_can_create_review(
 
 @pytest.mark.usefixtures('review_1')
 async def test_cant_create_review_one_more(
-    customer_client,
+    customer_client: AsyncClient,
     test_db_session: AsyncSession,
     product_1: Product
 ):
-    response = customer_client.post(
+    response = await customer_client.post(
         CREATE_URL.format(slug=product_1.slug),
         json={'grade': 5}
     )
@@ -85,11 +85,11 @@ async def test_cant_create_review_one_more(
 
 
 async def test_supplier_cant_review_own_product(
-    supplier_1_client: TestClient,
+    supplier_1_client: AsyncClient,
     test_db_session: AsyncSession,
     product_1: Product
 ):
-    response = supplier_1_client.post(
+    response = await supplier_1_client.post(
         CREATE_URL.format(slug=product_1.slug), json={'grade': 1}
     )
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -104,12 +104,12 @@ async def test_supplier_cant_review_own_product(
     ({}, {'grade': 'abcd'}, {'grade': 0}, {'grade': 11})
 )
 async def test_cant_create_review_with_invalid_data(
-    customer_client: TestClient,
+    customer_client: AsyncClient,
     test_db_session: AsyncSession,
     product_1: Product,
     data: dict
 ):
-    response = customer_client.post(
+    response = await customer_client.post(
         CREATE_URL.format(slug=product_1.slug),
         json=data
     )
@@ -131,11 +131,11 @@ async def test_cant_create_review_with_invalid_data(
     )
 )
 async def test_users_can_update_review(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     review: Review
 ):
     data = {'grade': 3, 'text': 'такое себе'}
-    response = parametrized_client.patch(
+    response = await parametrized_client.patch(
         DETAIL_URL.format(slug=review.product.slug, id=review.id), json=data
     )
     assert response.status_code == HTTPStatus.OK
@@ -150,7 +150,6 @@ async def test_users_can_update_review(
     check_db_data(response, data, review)
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize(
     'parametrized_client, review, expected_status',
     (
@@ -162,13 +161,13 @@ async def test_users_can_update_review(
     )
 )
 async def test_users_cant_update_any_review(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     review: Review,
     expected_status: int,
     review_fields: tuple[str, ...]
 ):
     data = {k: getattr(review, k) for k in review_fields}
-    response = parametrized_client.patch(
+    response = await parametrized_client.patch(
         DETAIL_URL.format(slug=review.product.slug, id=review.id),
         json={'grade': 8}
     )
@@ -187,11 +186,11 @@ async def test_users_cant_update_any_review(
     )
 )
 async def test_users_can_delete_review(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     review: Review
 ):
-    response = parametrized_client.delete(
+    response = await parametrized_client.delete(
         DETAIL_URL.format(slug=review.product.slug, id=review.id)
     )
     assert response.status_code == HTTPStatus.NO_CONTENT
@@ -201,7 +200,6 @@ async def test_users_can_delete_review(
     assert count == 0
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize(
     'parametrized_client, review, expected_status',
     (
@@ -213,12 +211,12 @@ async def test_users_can_delete_review(
     )
 )
 async def test_users_cant_delete_any_review(
-    parametrized_client: TestClient,
+    parametrized_client: AsyncClient,
     test_db_session: AsyncSession,
     review: Review,
     expected_status: int,
 ):
-    response = parametrized_client.patch(
+    response = await parametrized_client.patch(
         DETAIL_URL.format(slug=review.product.slug, id=review.id),
     )
     assert response.status_code == expected_status

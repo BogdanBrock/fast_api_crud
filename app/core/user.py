@@ -41,7 +41,7 @@ async def authenticate_user(
     return user
 
 
-async def create_access_token(
+def create_access_token(
     username: str,
     expiration_time: int
 ) -> str:

@@ -6,7 +6,6 @@ import pytest_asyncio
 from app.models import Review
 from ..utils import create_db_obj
 
-
 CREATE_URL = '/api/v1/products/{slug}/reviews/'
 DETAIL_URL = f'{CREATE_URL}' + '{id}/'
 

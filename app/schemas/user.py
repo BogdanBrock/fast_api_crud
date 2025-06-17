@@ -18,7 +18,6 @@ class UserUpdateSchema(BaseModel):
     username: str = Field(pattern=USER_USERNAME_REGEXP, default=None)
     email: EmailStr = Field(max_length=USER_EMAIL_MAX_LENGTH, default=None)
     password: str = Field(max_length=USER_PASSWORD_MAX_LENGTH, default=None)
-    role: RoleEnum = None
 
 
 class UserCreateSchema(BaseModel):

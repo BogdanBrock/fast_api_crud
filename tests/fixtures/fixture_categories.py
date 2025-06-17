@@ -12,13 +12,13 @@ DETAIL_URL = LIST_URL + '{slug}/'
 
 
 @pytest.fixture
-def category_request():
+async def category_request():
     """Фикстура для запроса категории."""
     return {'name': 'категория 1'}
 
 
 @pytest.fixture
-def category_response(category_request):
+async def category_response(category_request):
     """Фикстура для ответных данных категории."""
     return {
         'id': 1,

@@ -4,6 +4,8 @@ from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
+
+from httpx import AsyncClient, ASGITransport
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -15,15 +17,17 @@ from app.core.db import Base
 from app.main import app
 from app.core.db import db_session
 
-TEST_DATABASE_URL = 'sqlite+aiosqlite:///:memory:'
+TEST_DATABASE_URL = 'sqlite+aiosqlite:///test_db'
 
-test_engine = create_async_engine(TEST_DATABASE_URL, future=True)
+test_engine = create_async_engine(
+    TEST_DATABASE_URL,
+    connect_args={'check_same_thread': False}
+)
 
 test_async_session = async_sessionmaker(
     test_engine,
     class_=AsyncSession,
-    autocommit=False,
-    autoflush=False
+    expire_on_commit=False
 )
 
 
@@ -54,10 +58,11 @@ async def override_session(test_db_session):
 
 
 @pytest.fixture
-def client():
+async def client():
     """Фикстура для создания анонимного клиента."""
-    with TestClient(app) as client:
-        yield client
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url='http://test') as ac:
+        yield ac
 
 
 pytest_plugins = (
