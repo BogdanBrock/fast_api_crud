@@ -2,48 +2,41 @@
 
 import pytest
 import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 from slugify import slugify
 
 from app.models import Category
 from ..utils import create_db_obj
 
-LIST_URL = '/api/v1/categories/'
-DETAIL_URL = LIST_URL + '{slug}/'
-
-
-@pytest.fixture
-async def category_request():
-    """Фикстура для запроса категории."""
-    return {'name': 'категория 1'}
-
-
-@pytest.fixture
-async def category_response(category_request):
-    """Фикстура для ответных данных категории."""
-    return {
-        'id': 1,
-        'name': category_request['name'],
-        'slug': slugify(category_request['name']),
-        'parent_slug': None
-    }
-
 
 @pytest_asyncio.fixture
-async def parent_category(test_db_session, category_request):
+async def parent_category(test_db_session: AsyncSession) -> Category:
     """Фикстура для создания родительской категории."""
-    category = Category(
-        name=category_request['name'],
-        slug=slugify(category_request['name'])
-    )
-    return await create_db_obj(test_db_session, category)
-
-
-@pytest_asyncio.fixture
-async def category_1(test_db_session, parent_category):
-    """Фикстура для создания категории 1."""
     name = 'категория 2'
     category = Category(
         name=name,
+        slug=slugify(name)
+    )
+    return await create_db_obj(test_db_session, category)
+
+
+@pytest_asyncio.fixture
+async def category_1(test_db_session: AsyncSession) -> Category:
+    """Фикстура для создания категории 1."""
+    name = 'категория 3'
+    category = Category(name=name, slug=slugify(name))
+    return await create_db_obj(test_db_session, category)
+
+
+@pytest_asyncio.fixture
+async def category_2(
+    test_db_session: AsyncSession,
+    parent_category: Category
+) -> Category:
+    """Фикстура для создания категории 2."""
+    name = 'категория 4'
+    category = Category(
+        name=name,
         slug=slugify(name),
         parent_slug=parent_category.slug
     )
@@ -51,9 +44,12 @@ async def category_1(test_db_session, parent_category):
 
 
 @pytest_asyncio.fixture
-async def category_2(test_db_session, parent_category):
-    """Фикстура для создания категории 2."""
-    name = 'категория 3'
+async def category_3(
+    test_db_session: AsyncSession,
+    parent_category: Category
+) -> Category:
+    """Фикстура для создания категории 3."""
+    name = 'категория 5'
     category = Category(
         name=name,
         slug=slugify(name),
@@ -63,5 +59,5 @@ async def category_2(test_db_session, parent_category):
 
 
 @pytest.fixture
-def category_fields():
+def category_fields() -> tuple[str, ...]:
     return ('id', 'name', 'slug', 'parent_slug')

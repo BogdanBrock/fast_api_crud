@@ -63,8 +63,7 @@ async def test_users_can_create_review(
         }
     )
     check_json_data(response, data)
-    review = reviews[0]
-    check_db_data(response, data, review)
+    check_db_data(response, data, reviews[0])
 
 
 @pytest.mark.usefixtures('review_1')

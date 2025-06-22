@@ -8,25 +8,14 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.validators import (validate_and_decode_token,
-                                validate_credentials)
+from app.api.exceptions import ValidationError, UnauthorizedError
 from app.core.config import settings
 from app.core.db import db_session
 from app.crud import user_crud
 from app.models import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/login/')
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-
-
-def get_hashed_password(password: str) -> str:
-    """Функция для получения закодированного пароля."""
-    return bcrypt_context.hash(password)
-
-
-def verify_password(plain_password, hashed_password) -> bool:
-    """Функция для проверки закодированного пароля."""
-    return bcrypt_context.verify(plain_password, hashed_password)
 
 
 async def authenticate_user(
@@ -36,8 +25,10 @@ async def authenticate_user(
 ) -> User:
     """Функция для аутентификации пользователя."""
     user = await user_crud.get_user_by_username(username, session)
-    is_password_hashed = verify_password(password, user.password)
-    await validate_credentials(user, is_password_hashed)
+    if user:
+        is_password_hashed = bcrypt_context.verify(password, user.password)
+    if not (user and is_password_hashed):
+        raise ValidationError('Не правильные учетные данные')
     return user
 
 
@@ -52,6 +43,21 @@ def create_access_token(
     return jwt.encode(payload,
                       settings.SECRET_KEY,
                       algorithm=settings.ALGORITHM)
+
+
+async def validate_and_decode_token(token: str) -> dict | None:
+    """Функция для валидации и декодирования токена."""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
+    except jwt.ExpiredSignatureError:
+        raise UnauthorizedError('Срок действия токена истек')
+    except jwt.PyJWTError:
+        raise UnauthorizedError('Недействительный токен')
+    return payload
 
 
 async def get_current_user(

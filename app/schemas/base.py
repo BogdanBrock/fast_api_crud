@@ -4,16 +4,22 @@ from pydantic import BaseModel, computed_field
 from slugify import slugify
 
 
-class AbstractBaseSchema(BaseModel):
-    """Абстрактный класс для наследования."""
+class AbstractCreateSchema(BaseModel):
+    """Абстрактный класс для создания."""
+
+    @computed_field
+    def slug(self) -> str:
+        """Функция для вычисления slug по имени."""
+        return slugify(self.name)
+
+
+class AbstractUpdateSchema(BaseModel):
+    """Абстрактный класс для обновления"""
 
     def model_dump(self, *args, **kwargs):
         """Метод для создания словаря из модели pydantic."""
         data = super().model_dump(*args, **kwargs)
-        data['slug'] = slugify(data['name'])
+        name = data.get('name')
+        if name:
+            data['slug'] = slugify(name)
         return data
-
-    @computed_field
-    def slug(self) -> str | None:
-        """Функция для вычисления slug по имени."""
-        return slugify(self.name) if self.name else None

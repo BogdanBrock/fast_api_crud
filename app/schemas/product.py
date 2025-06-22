@@ -5,10 +5,10 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 from app.core.constants import (PRODUCT_IMAGE_URL_MAX_LENGTH,
                                 PRODUCT_NAME_MAX_LENGTH)
-from app.schemas import AbstractBaseSchema
+from app.schemas import AbstractCreateSchema, AbstractUpdateSchema
 
 
-class ProductUpdateSchema(AbstractBaseSchema):
+class ProductUpdateSchema(AbstractUpdateSchema):
     """Схема ProductUpdateSchema для валидации и обновления данных."""
 
     name: str = Field(max_length=PRODUCT_NAME_MAX_LENGTH, default=None)
@@ -25,7 +25,7 @@ class ProductUpdateSchema(AbstractBaseSchema):
         return str(value)
 
 
-class ProductCreateSchema(ProductUpdateSchema):
+class ProductCreateSchema(AbstractCreateSchema, ProductUpdateSchema):
     """Схема ProductCreateSchema для валидации и создания данных."""
 
     name: str = Field(max_length=PRODUCT_NAME_MAX_LENGTH)

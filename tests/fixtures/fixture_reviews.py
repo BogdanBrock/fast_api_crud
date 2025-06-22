@@ -2,8 +2,10 @@
 
 import pytest
 import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Review
+
+from app.models import Review, Product, User
 from ..utils import create_db_obj
 
 CREATE_URL = '/api/v1/products/{slug}/reviews/'
@@ -11,7 +13,11 @@ DETAIL_URL = f'{CREATE_URL}' + '{id}/'
 
 
 @pytest_asyncio.fixture
-async def review_1(test_db_session, product_1, customer):
+async def review_1(
+    test_db_session: AsyncSession,
+    product_1: Product,
+    customer: User
+) -> Review:
     review = Review(
         grade=1,
         text='плохой товар',
@@ -22,7 +28,11 @@ async def review_1(test_db_session, product_1, customer):
 
 
 @pytest_asyncio.fixture
-async def review_2(test_db_session, product_2, supplier_1):
+async def review_2(
+    test_db_session: AsyncSession,
+    product_2: Product,
+    supplier_1: User
+) -> Review:
     review = Review(
         grade=5,
         text='неплохой товар',
@@ -33,7 +43,11 @@ async def review_2(test_db_session, product_2, supplier_1):
 
 
 @pytest_asyncio.fixture
-async def review_3(test_db_session, product_1, admin):
+async def review_3(
+    test_db_session: AsyncSession,
+    product_1: Product,
+    admin: User
+) -> Review:
     review = Review(
         grade=10,
         text='лучший товар',
@@ -44,5 +58,5 @@ async def review_3(test_db_session, product_1, admin):
 
 
 @pytest.fixture
-def review_fields():
-    return {'id', 'grade', 'text', 'product_slug', 'user_username'}
+def review_fields() -> tuple[str, ...]:
+    return ('id', 'grade', 'text', 'product_slug', 'user_username')

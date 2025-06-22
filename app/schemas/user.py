@@ -1,6 +1,8 @@
 """Модуль для создания схем модели User."""
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from fastapi.exceptions import HTTPException
+from fastapi import status
 
 from app.core.constants import (USER_EMAIL_MAX_LENGTH,
                                 USER_FIRST_NAME_MAX_LENGTH,

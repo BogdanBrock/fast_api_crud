@@ -1,6 +1,6 @@
 """Файл для инициализации пакета."""
 
-from .base import AbstractBaseSchema
+from .base import AbstractCreateSchema, AbstractUpdateSchema
 from .category import (
     CategoryCreateSchema,
     CategoryReadSchema,

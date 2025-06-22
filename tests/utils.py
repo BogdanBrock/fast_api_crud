@@ -7,7 +7,7 @@ def check_json_data(response, expected_data):
     request_method = response.request.method
     missing_keys = expected_data.keys() - response_data.keys()
     assert not missing_keys, (
-        f'Проверьте, что {request_method}-запрос содержит в теле ' 
+        f'Проверьте, что {request_method}-запрос содержит в теле '
         f'ответа такие поля как: `{"`, `".join(missing_keys)}`'
     )
     wrong_data = [
@@ -20,7 +20,7 @@ def check_json_data(response, expected_data):
 
 
 def check_db_data(response, expected_data, obj):
-    """Функция для проверки значений для БД."""
+    """Функция для проверки значений в полях БД."""
     request_method = response.request.method
     db_data = {key: getattr(obj, key) for key in expected_data}
     wrong_data = {k for k in expected_data if expected_data[k] != db_data[k]}
@@ -31,6 +31,7 @@ def check_db_data(response, expected_data, obj):
 
 
 def check_db_fields(db_fields, model_class):
+    """Функция для проверки наличия полей в БД."""
     expected_fields = set(db_fields)
     db_keys = {key for key in expected_fields if hasattr(model_class, key)}
     missing_keys = expected_fields - db_keys

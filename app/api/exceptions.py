@@ -3,8 +3,8 @@
 from fastapi import HTTPException, status
 
 
-class BadRequestError(HTTPException):
-    """Исключение BadRequestError."""
+class ValidationError(HTTPException):
+    """Исключение ValidationError."""
 
     def __init__(self, detail: str | None = None):
         """Магический метод для инициализации атрибутов объекта."""

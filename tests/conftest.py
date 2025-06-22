@@ -6,7 +6,6 @@ import pytest
 import pytest_asyncio
 
 from httpx import AsyncClient, ASGITransport
-from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -17,7 +16,7 @@ from app.core.db import Base
 from app.main import app
 from app.core.db import db_session
 
-TEST_DATABASE_URL = 'sqlite+aiosqlite:///test_db'
+TEST_DATABASE_URL = 'sqlite+aiosqlite:///:memory:'
 
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
@@ -60,9 +59,11 @@ async def override_session(test_db_session):
 @pytest.fixture
 async def client():
     """Фикстура для создания анонимного клиента."""
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url='http://test') as ac:
-        yield ac
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url='http://test'
+    ) as client:
+        yield client
 
 
 pytest_plugins = (

@@ -2,7 +2,7 @@
 
 import jwt
 
-from app.api.exceptions import (BadRequestError,
+from app.api.exceptions import (ValidationError,
                                 NotFoundError,
                                 UnauthorizedError)
 from app.core.config import settings
@@ -52,7 +52,7 @@ async def check_category_already_exists(
     """Функция для проверки уже существующей категории."""
     category = await category_crud.get_object_by_slug(category_slug, session)
     if category:
-        raise BadRequestError('Нельзя создать две одинаковые категории.')
+        raise ValidationError('Нельзя создать две одинаковые категории.')
 
 
 async def check_product_already_exists(
@@ -62,7 +62,7 @@ async def check_product_already_exists(
     """Функция для проверки уже существующего продукта."""
     product = await product_crud.get_object_by_slug(product_slug, session)
     if product:
-        raise BadRequestError('Нельзя создать два одинаковых продукта.')
+        raise ValidationError('Нельзя создать два одинаковых продукта.')
 
 
 async def check_review_already_exists(
@@ -77,7 +77,7 @@ async def check_review_already_exists(
         session
     )
     if review:
-        raise BadRequestError('Вы уже оставили отзыв на этот продукт.')
+        raise ValidationError('Вы уже оставили отзыв на этот продукт.')
 
 
 async def check_cant_review_own_product(
@@ -85,7 +85,7 @@ async def check_cant_review_own_product(
     review_username: ModelType
 ) -> None:
     if current_username == review_username:
-        raise BadRequestError('Нельзя оставлять отзыв на свой продукт')
+        raise ValidationError('Нельзя оставлять отзыв на свой продукт')
 
 
 async def check_user_already_exists(
@@ -96,25 +96,6 @@ async def check_user_already_exists(
     """Функция для проверки уже существующего пользователя категории."""
     data = await user_crud.get_username_and_email(username, email, session)
     if data and username == data.get('username'):
-        raise BadRequestError('Такое имя пользователя уже существует.')
+        raise ValidationError('Такое имя пользователя уже существует.')
     if data and email == data.get('email'):
-        raise BadRequestError('Такая почта уже существует.')
-
-
-async def validate_credentials(user: User, is_password_hashed: bool) -> None:
-    if not user and not is_password_hashed:
-        raise UnauthorizedError('Не правильные учетные данные')
-
-
-async def validate_and_decode_token(token: str) -> dict | None:
-    try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
-    except jwt.ExpiredSignatureError:
-        raise UnauthorizedError('Срок действия токена истек')
-    except jwt.PyJWTError:
-        raise UnauthorizedError('Недействительный токен')
-    return payload
+        raise ValidationError('Такая почта уже существует.')

@@ -1,10 +1,14 @@
 """Модуль создания фикстур для продуктов."""
 
+from typing import Any
+
 import pytest
 import pytest_asyncio
 from slugify import slugify
 
-from app.models import Product
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Category, Product, User
 from ..utils import create_db_obj
 
 LIST_URL = '/api/v1/products/'
@@ -12,7 +16,7 @@ DETAIL_URL = LIST_URL + '{slug}/'
 
 
 @pytest.fixture
-def product_request(category_1):
+def product_request(category_1: Category) -> dict[str, Any]:
     return {
         'name': 'продукт 1',
         'description': 'описание 1',
@@ -24,7 +28,7 @@ def product_request(category_1):
 
 
 @pytest.fixture
-def product_response(product_request):
+def product_response(product_request) -> dict[str, Any]:
     return {
         'id': 1,
         'name': product_request['name'],
@@ -39,7 +43,11 @@ def product_response(product_request):
 
 
 @pytest_asyncio.fixture
-async def product_1(test_db_session, product_request, supplier_1):
+async def product_1(
+    test_db_session: AsyncSession,
+    product_request: dict,
+    supplier_1: User
+) -> Product:
     product = Product(
         name=product_request['name'],
         slug=slugify(product_request['name']),
@@ -54,7 +62,11 @@ async def product_1(test_db_session, product_request, supplier_1):
 
 
 @pytest_asyncio.fixture
-async def product_2(test_db_session, category_1, supplier_2):
+async def product_2(
+    test_db_session: AsyncSession,
+    category_1: Category,
+    supplier_2: User
+):
     name = 'продукт 3'
     product = Product(
         name=name,
@@ -70,7 +82,7 @@ async def product_2(test_db_session, category_1, supplier_2):
 
 
 @pytest.fixture
-def product_fields():
+def product_fields() -> tuple[str, ...]:
     return (
         'id', 'name', 'slug', 'description', 'image_url', 'price',
         'stock', 'category_slug', 'user_username', 'rating'
