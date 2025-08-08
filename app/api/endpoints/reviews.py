@@ -1,21 +1,24 @@
-"""Модуль для создания маршрутов."""
+"""Модуль создания маршрутов для отзывов."""
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.permissions import (RequestContext,
-                                 is_owner_or_admin_permission)
-from app.api.validators import (check_cant_review_own_product,
-                                check_review_already_exists,
-                                get_product_or_not_found,
-                                get_review_or_not_found)
+from app.api.permissions import RequestContext, is_owner_or_admin_permission
 from app.core.db import db_session
-from app.core.user import get_current_user
+from app.core.security import get_current_user
+from app.core.validators import (
+    check_cant_review_own_product,
+    check_review_already_exists,
+    get_product_or_not_found,
+    get_review_or_not_found
+)
 from app.crud import review_crud
 from app.models import User
-from app.schemas.review import (ReviewCreateSchema,
-                                ReviewReadSchema,
-                                ReviewUpdateSchema)
+from app.schemas import (
+    ReviewCreateSchema,
+    ReviewReadSchema,
+    ReviewUpdateSchema
+)
 
 router = APIRouter()
 

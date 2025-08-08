@@ -5,18 +5,15 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from slugify import slugify
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Category, Product, User
 from ..utils import create_db_obj
 
-LIST_URL = '/api/v1/products/'
-DETAIL_URL = LIST_URL + '{slug}/'
-
 
 @pytest.fixture
-def product_request(category_1: Category) -> dict[str, Any]:
+def product_request_data(category_1: Category) -> dict[str, Any]:
+    """Фикстура для получения данных запроса продукта."""
     return {
         'name': 'продукт 1',
         'description': 'описание 1',
@@ -28,16 +25,19 @@ def product_request(category_1: Category) -> dict[str, Any]:
 
 
 @pytest.fixture
-def product_response(product_request) -> dict[str, Any]:
+def product_response_data(
+    product_request_data: dict[str, Any]
+) -> dict[str, Any]:
+    """Фикстура для получения ожидаемых данных продукта."""
     return {
         'id': 1,
-        'name': product_request['name'],
-        'slug': slugify(product_request['name']),
-        'description': product_request['description'],
-        'image_url': product_request['image_url'],
-        'price': product_request['price'],
-        'stock': product_request['stock'],
-        'category_slug': product_request['category_slug'],
+        'name': product_request_data['name'],
+        'slug': slugify(product_request_data['name']),
+        'description': product_request_data['description'],
+        'image_url': product_request_data['image_url'],
+        'price': product_request_data['price'],
+        'stock': product_request_data['stock'],
+        'category_slug': product_request_data['category_slug'],
         'rating': 0
     }
 
@@ -45,17 +45,18 @@ def product_response(product_request) -> dict[str, Any]:
 @pytest_asyncio.fixture
 async def product_1(
     test_db_session: AsyncSession,
-    product_request: dict,
+    product_request_data: dict[str, Any],
     supplier_1: User
 ) -> Product:
+    """Фикстура для создания продукта."""
     product = Product(
-        name=product_request['name'],
-        slug=slugify(product_request['name']),
-        description=product_request['description'],
-        image_url=product_request['image_url'],
-        price=product_request['price'],
-        stock=product_request['stock'],
-        category_slug=product_request['category_slug'],
+        name=product_request_data['name'],
+        slug=slugify(product_request_data['name']),
+        description=product_request_data['description'],
+        image_url=product_request_data['image_url'],
+        price=product_request_data['price'],
+        stock=product_request_data['stock'],
+        category_slug=product_request_data['category_slug'],
         user_username=supplier_1.username
     )
     return await create_db_obj(test_db_session, product)
@@ -66,7 +67,8 @@ async def product_2(
     test_db_session: AsyncSession,
     category_1: Category,
     supplier_2: User
-):
+) -> Product:
+    """Фикстура для создания продукта."""
     name = 'продукт 3'
     product = Product(
         name=name,
@@ -83,6 +85,7 @@ async def product_2(
 
 @pytest.fixture
 def product_fields() -> tuple[str, ...]:
+    """Фикстура с ожидаемыми полями продукта."""
     return (
         'id', 'name', 'slug', 'description', 'image_url', 'price',
         'stock', 'category_slug', 'user_username', 'rating'

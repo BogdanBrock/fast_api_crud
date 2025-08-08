@@ -5,15 +5,17 @@ from enum import Enum
 from sqlalchemy import String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.constants import (USER_EMAIL_MAX_LENGTH,
-                                USER_FIRST_NAME_MAX_LENGTH,
-                                USER_LAST_NAME_MAX_LENGTH,
-                                USER_PASSWORD_MAX_LENGTH)
+from app.core.constants import (
+    USER_EMAIL_MAX_LENGTH,
+    USER_FIRST_NAME_MAX_LENGTH,
+    USER_LAST_NAME_MAX_LENGTH,
+    USER_PASSWORD_MAX_LENGTH
+)
 from app.core.db import Base
 
 
 class RoleEnum(str, Enum):
-    """Класс RoleEnum для определения роли пользователя."""
+    """Класс для определения роли пользователя."""
 
     CUSTOMER = 'покупатель'
     SUPPLIER = 'поставщик'

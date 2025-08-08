@@ -3,12 +3,19 @@
 from decimal import Decimal
 
 from sqlalchemy import ForeignKey, Numeric, String, Text, func, select
-from sqlalchemy.orm import (Mapped, column_property, declared_attr,
-                            mapped_column, relationship)
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import (
+    Mapped,
+    column_property,
+    declared_attr,
+    mapped_column,
+    relationship
+)
 
-from app.core.constants import (PRODUCT_IMAGE_URL_MAX_LENGTH,
-                                PRODUCT_NAME_MAX_LENGTH)
+from app.core.constants import (
+    PRODUCT_IMAGE_URL_MAX_LENGTH,
+    PRODUCT_NAME_MAX_LENGTH
+)
 from app.core.db import Base
 
 
@@ -48,7 +55,7 @@ class Product(Base):
     @declared_attr
     def rating(cls) -> Decimal:
         """Атрибут для вычисления среднего рейтинга у продукта."""
-        from app.models.review import Review
+        from app.models.reviews import Review
         return column_property(
             select(func.coalesce(func.avg(Review.grade), 0)).
             where(Review.product_slug == cls.slug).

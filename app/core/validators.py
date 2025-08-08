@@ -1,68 +1,73 @@
 """Модуль для создания валидаторов."""
 
-import jwt
-
-from app.api.exceptions import (ValidationError,
-                                NotFoundError,
-                                UnauthorizedError)
-from app.core.config import settings
+from app.core.exceptions import NotFoundError, ValidationError
 from app.core.db import AsyncSession
 from app.crud import category_crud, product_crud, review_crud, user_crud
-from app.crud.base import ModelType
-from app.models import Category, Product, Review, User
+from app.crud import ModelType
+from app.models import Category, Product, Review
 
 
 async def get_category_or_not_found(
     category_slug: str,
     session: AsyncSession,
 ) -> Category | None:
-    """Функция для проверки существования категории и получения категории."""
+    """Валидация существования категории и получения категории."""
     category = await category_crud.get_object_by_slug(category_slug, session)
     if not category:
         raise NotFoundError('Такой категории не существует.')
     return category
 
 
+async def check_category_already_exists(
+    category_slug: str,
+    session: AsyncSession
+) -> Category | None:
+    """Валидация уже существующей категории."""
+    category = await category_crud.get_object_by_slug(category_slug, session)
+    if category:
+        raise ValidationError('Уже есть такая категория.')
+
+
+async def check_cant_change_parent_category(
+    category_slug: str,
+    session: AsyncSession,
+) -> None:
+    """Валидация для невозможности изменения родительскогой категории."""
+    parent_slug = await category_crud.get_parent_slug(category_slug, session)
+    if parent_slug:
+        raise ValidationError('Нельзя поменять родительскую категорию.')
+
+
 async def get_product_or_not_found(
     product_slug: str,
     session: AsyncSession
 ) -> Product | None:
-    """Функция для проверки существования продукта и получения продукта."""
+    """Валидация существования продукта и получения продукта."""
     product = await product_crud.get_object_by_slug(product_slug, session)
     if not product:
         raise NotFoundError('Такого продукта не существует.')
     return product
 
 
-async def get_review_or_not_found(
-    review_id: int,
-    session: AsyncSession
-) -> Review | None:
-    """Функция для проверки существования отзыва и получения отзыва."""
-    review = await review_crud.get(review_id, session)
-    if not review:
-        raise NotFoundError('Такого отзыва не существует.')
-    return review
-
-
-async def check_category_already_exists(
-    category_slug: str,
-    session: AsyncSession
-) -> Category | None:
-    """Функция для проверки уже существующей категории."""
-    category = await category_crud.get_object_by_slug(category_slug, session)
-    if category:
-        raise ValidationError('Нельзя создать две одинаковые категории.')
-
-
 async def check_product_already_exists(
     product_slug: str,
     session: AsyncSession
 ) -> Product | None:
-    """Функция для проверки уже существующего продукта."""
+    """Валидация уже существующего продукта."""
     product = await product_crud.get_object_by_slug(product_slug, session)
     if product:
-        raise ValidationError('Нельзя создать два одинаковых продукта.')
+        raise ValidationError('Уже есть такой продукт.')
+
+
+async def get_review_or_not_found(
+    review_id: int,
+    session: AsyncSession
+) -> Review | None:
+    """Валидация существования отзыва и получения отзыва."""
+    review = await review_crud.get(review_id, session)
+    if not review:
+        raise NotFoundError('Такого отзыва не существует.')
+    return review
 
 
 async def check_review_already_exists(
@@ -70,7 +75,7 @@ async def check_review_already_exists(
     username: str,
     session: AsyncSession
 ) -> Review | None:
-    """Функция для проверки уже существующего отзыва."""
+    """Валидация для уже существующего отзыва."""
     review = await review_crud.get_review_by_product_slug_and_username(
         product_slug,
         username,
@@ -84,6 +89,9 @@ async def check_cant_review_own_product(
     current_username: str,
     review_username: ModelType
 ) -> None:
+    """
+    Валидация для проверки, что нельзя оценивать свой собственный продукт.
+    """
     if current_username == review_username:
         raise ValidationError('Нельзя оставлять отзыв на свой продукт')
 
@@ -93,7 +101,7 @@ async def check_user_already_exists(
     email: str,
     session: AsyncSession
 ) -> None:
-    """Функция для проверки уже существующего пользователя категории."""
+    """Валидация для уже существующего пользователя."""
     data = await user_crud.get_username_and_email(username, email, session)
     if data and username == data.get('username'):
         raise ValidationError('Такое имя пользователя уже существует.')

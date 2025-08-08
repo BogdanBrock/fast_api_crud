@@ -1,20 +1,23 @@
 """Модуль для создания схем модели Product."""
 
-
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
-from app.core.constants import (PRODUCT_IMAGE_URL_MAX_LENGTH,
-                                PRODUCT_NAME_MAX_LENGTH)
-from app.schemas import AbstractCreateSchema, AbstractUpdateSchema
+from app.core.constants import (
+    PRODUCT_IMAGE_URL_MAX_LENGTH,
+    PRODUCT_NAME_MAX_LENGTH
+)
+from app.schemas.mixins import SlugMixin
 
 
-class ProductUpdateSchema(AbstractUpdateSchema):
-    """Схема ProductUpdateSchema для валидации и обновления данных."""
+class ProductUpdateSchema(BaseModel, SlugMixin):
+    """Схема для валидации и обновления данных."""
 
     name: str = Field(max_length=PRODUCT_NAME_MAX_LENGTH, default=None)
     description: str | None = None
-    image_url: HttpUrl | None = Field(max_length=PRODUCT_IMAGE_URL_MAX_LENGTH,
-                                      default=None)
+    image_url: HttpUrl | None = Field(
+        max_length=PRODUCT_IMAGE_URL_MAX_LENGTH,
+        default=None
+    )
     price: float = Field(gt=0, default=None)
     stock: int = Field(ge=0, default=None)
 
@@ -25,8 +28,8 @@ class ProductUpdateSchema(AbstractUpdateSchema):
         return str(value)
 
 
-class ProductCreateSchema(AbstractCreateSchema, ProductUpdateSchema):
-    """Схема ProductCreateSchema для валидации и создания данных."""
+class ProductCreateSchema(ProductUpdateSchema, SlugMixin):
+    """Схема для валидации и создания данных."""
 
     name: str = Field(max_length=PRODUCT_NAME_MAX_LENGTH)
     price: float = Field(gt=0)
@@ -35,7 +38,7 @@ class ProductCreateSchema(AbstractCreateSchema, ProductUpdateSchema):
 
 
 class ProductReadSchema(BaseModel):
-    """Схема ProductReadSchema для чтения данных."""
+    """Схема для чтения данных."""
 
     id: int
     name: str

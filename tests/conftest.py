@@ -2,19 +2,16 @@
 
 from typing import AsyncGenerator
 
-import pytest
 import pytest_asyncio
-
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine
 )
 
-from app.core.db import Base
+from app.core.db import Base, db_session
 from app.main import app
-from app.core.db import db_session
 
 TEST_DATABASE_URL = 'sqlite+aiosqlite:///:memory:'
 
@@ -48,16 +45,16 @@ async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def override_session(test_db_session):
-    """Фикстура для переопределения сессии в прилоежении."""
+async def override_session(test_db_session) -> None:
+    """Фикстура для переопределения сессии в приложении."""
     async def mock_get_session():
         yield test_db_session
     app.dependency_overrides = {}
     app.dependency_overrides[db_session] = mock_get_session
 
 
-@pytest.fixture
-async def client():
+@pytest_asyncio.fixture
+async def client() -> AsyncGenerator[AsyncClient, None]:
     """Фикстура для создания анонимного клиента."""
     async with AsyncClient(
         transport=ASGITransport(app=app),

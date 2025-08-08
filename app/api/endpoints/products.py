@@ -1,19 +1,25 @@
-"""Модуль для создания маршрутов."""
+"""Модуль создания маршрутов для продуктов."""
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.permissions import (RequestContext,
-                                 is_supplier_or_admin_permission,
-                                 is_supplier_owner_or_admin_permission)
-from app.api.validators import (check_product_already_exists,
-                                get_category_or_not_found,
-                                get_product_or_not_found)
+from app.api.permissions import (
+    RequestContext,
+    is_supplier_or_admin_permission,
+    is_supplier_owner_or_admin_permission
+)
 from app.core.db import db_session
+from app.core.validators import (
+    check_product_already_exists,
+    get_category_or_not_found,
+    get_product_or_not_found
+)
 from app.crud import product_crud
-from app.schemas.product import (ProductCreateSchema,
-                                 ProductReadSchema,
-                                 ProductUpdateSchema)
+from app.schemas import (
+    ProductCreateSchema,
+    ProductReadSchema,
+    ProductUpdateSchema
+)
 
 router = APIRouter()
 

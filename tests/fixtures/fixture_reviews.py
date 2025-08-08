@@ -4,12 +4,8 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from app.models import Review, Product, User
+from app.models import Product, Review, User
 from ..utils import create_db_obj
-
-CREATE_URL = '/api/v1/products/{slug}/reviews/'
-DETAIL_URL = f'{CREATE_URL}' + '{id}/'
 
 
 @pytest_asyncio.fixture
@@ -18,6 +14,7 @@ async def review_1(
     product_1: Product,
     customer: User
 ) -> Review:
+    """Фикстура для создания отзыва."""
     review = Review(
         grade=1,
         text='плохой товар',
@@ -33,6 +30,7 @@ async def review_2(
     product_2: Product,
     supplier_1: User
 ) -> Review:
+    """Фикстура для создания отзыва."""
     review = Review(
         grade=5,
         text='неплохой товар',
@@ -48,6 +46,7 @@ async def review_3(
     product_1: Product,
     admin: User
 ) -> Review:
+    """Фикстура для создания отзыва."""
     review = Review(
         grade=10,
         text='лучший товар',
@@ -59,4 +58,5 @@ async def review_3(
 
 @pytest.fixture
 def review_fields() -> tuple[str, ...]:
+    """Фикстура с ожидаемыми полями отзыва."""
     return ('id', 'grade', 'text', 'product_slug', 'user_username')

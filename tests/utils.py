@@ -31,7 +31,7 @@ def check_db_data(response, expected_data, obj):
 
 
 def check_db_fields(db_fields, model_class):
-    """Функция для проверки наличия полей в БД."""
+    """Функция для проверки наличия полей."""
     expected_fields = set(db_fields)
     db_keys = {key for key in expected_fields if hasattr(model_class, key)}
     missing_keys = expected_fields - db_keys

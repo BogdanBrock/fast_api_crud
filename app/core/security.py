@@ -1,4 +1,4 @@
-"""Модуль для реализации бизнес-логики пользователя."""
+"""Модуль для реализации авторизации и токенов пользователя."""
 
 from datetime import datetime, timedelta, timezone
 
@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.exceptions import ValidationError, UnauthorizedError
+from app.core.exceptions import UnauthorizedError, ValidationError
 from app.core.config import settings
 from app.core.db import db_session
 from app.crud import user_crud
@@ -38,11 +38,15 @@ def create_access_token(
 ) -> str:
     """Функция для создания токена."""
     exp = datetime.now(timezone.utc) + timedelta(minutes=expiration_time)
-    payload = {'sub': username,
-               'exp': int(exp.timestamp())}
-    return jwt.encode(payload,
-                      settings.SECRET_KEY,
-                      algorithm=settings.ALGORITHM)
+    payload = {
+        'sub': username,
+        'exp': int(exp.timestamp())
+    }
+    return jwt.encode(
+        payload,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM
+    )
 
 
 async def validate_and_decode_token(token: str) -> dict | None:

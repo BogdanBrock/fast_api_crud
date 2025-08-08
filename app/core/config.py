@@ -1,4 +1,4 @@
-"""Модуль для настройки переменных окружения"""
+"""Модуль для настройки переменных окружения."""
 
 from pathlib import Path
 
@@ -24,9 +24,11 @@ class Settings(BaseSettings):
     @property
     def db_url(self):
         """Подключение к postgresql."""
-        return ('postgresql+asyncpg://'
-                f'{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@'
-                f'{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}')
+        return (
+            'postgresql+asyncpg://'
+            f'{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@'
+            f'{self.DB_HOST}:{self.DB_PORT}/{self.POSTGRES_DB}'
+        )
 
 
 settings = Settings()

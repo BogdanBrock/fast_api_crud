@@ -2,8 +2,13 @@
 
 from fastapi import APIRouter
 
-from app.api.endpoints import (auth_router, category_router, product_router,
-                               review_router, user_router)
+from app.api.endpoints import (
+    auth_router,
+    category_router,
+    product_router,
+    review_router,
+    user_router
+)
 
 main_router = APIRouter(prefix='/api/v1')
 

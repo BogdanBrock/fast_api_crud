@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 
 
 class ValidationError(HTTPException):
-    """Исключение ValidationError."""
+    """Ошибка 400 для валидации данных."""
 
     def __init__(self, detail: str | None = None):
         """Магический метод для инициализации атрибутов объекта."""
@@ -13,7 +13,7 @@ class ValidationError(HTTPException):
 
 
 class UnauthorizedError(HTTPException):
-    """Исключение UnauthorizedError."""
+    """Ошибка 401 для ограничения прав анонимных пользователей."""
 
     def __init__(self, detail: str | None = None):
         """Магический метод для инициализации атрибутов объекта."""
@@ -22,7 +22,7 @@ class UnauthorizedError(HTTPException):
 
 
 class ForbiddenError(HTTPException):
-    """Исключение ForbiddenError."""
+    """Ошибка 403 для ограничения прав авторизованных пользователей."""
 
     def __init__(self, detail: str | None = None):
         """Магический метод для инициализации атрибутов объекта."""
@@ -31,7 +31,7 @@ class ForbiddenError(HTTPException):
 
 
 class NotFoundError(HTTPException):
-    """Исключение NotFoundError."""
+    """Ошибка 404 в случае отсутствия объекта."""
 
     def __init__(self, detail: str | None = None):
         """Магический метод для инициализации атрибутов объекта."""

@@ -8,7 +8,7 @@ from app.models import Category, Product
 
 
 class CRUDProduct(AbstractCRUDBase):
-    """Класс для созданий CRUD операций для продукта."""
+    """Класс для создания CRUD операций для продукта."""
 
     async def get_products_by_category_or_is_active_or_all(
         self,

@@ -1,21 +1,25 @@
-"""Модуль создания разрешений для пользователя."""
+"""Модуль создания разрешений для пользователей."""
 
 from typing import TypedDict
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.endpoints.user import get_current_user
-from app.api.exceptions import ForbiddenError
-from app.api.validators import (get_category_or_not_found,
-                                get_product_or_not_found,
-                                get_review_or_not_found)
+from app.core.exceptions import ForbiddenError
 from app.core.db import db_session
+from app.core.security import get_current_user
+from app.core.validators import (
+    get_category_or_not_found,
+    get_product_or_not_found,
+    get_review_or_not_found
+)
 from app.crud import ModelType
 from app.models import Product, Review, RoleEnum, User
 
 
 class RequestContext(TypedDict):
+    """Контекст запроса."""
+
     user: User
     session: AsyncSession
     model_obj: ModelType = None
@@ -78,7 +82,7 @@ class IsAdminPermission(BasePermission):
         """Разрешение на уровне объекта."""
         if not user.role == RoleEnum.ADMIN:
             raise ForbiddenError(
-                'Только админ можно изменять или удалять данные.'
+                'Только администратору можно изменять или удалять данные.'
             )
         return True
 

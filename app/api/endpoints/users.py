@@ -1,19 +1,20 @@
-"""Модуль для создания маршрутов."""
+"""Модуль создания маршрутов для пользователей."""
 
 from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.validators import check_user_already_exists
 from app.core.config import settings
 from app.core.db import db_session
-from app.core.user import (authenticate_user, create_access_token,
-                           get_current_user, bcrypt_context)
+from app.core.security import (
+    authenticate_user,
+    create_access_token,
+    get_current_user
+)
+from app.core.validators import check_user_already_exists
 from app.crud import user_crud
 from app.models import User
-from app.schemas.user import (UserCreateSchema,
-                              UserReadSchema,
-                              UserUpdateSchema)
+from app.schemas import UserCreateSchema, UserReadSchema, UserUpdateSchema
 
 auth_router = APIRouter()
 user_router = APIRouter()
@@ -21,12 +22,13 @@ user_router = APIRouter()
 
 @auth_router.post(
     '/login/',
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, str]
 )
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(db_session)
-) -> dict[str, str]:
+):
     """Маршрут для авторизации пользователя."""
     user = await authenticate_user(
         form_data.username,
@@ -37,8 +39,10 @@ async def login(
         user.username,
         expiration_time=settings.TOKEN_EXPIRE
     )
-    return {'access_token': token,
-            'token_type': 'bearer'}
+    return {
+        'access_token': token,
+        'token_type': 'bearer'
+    }
 
 
 @user_router.get('/me/', response_model=UserReadSchema)
@@ -66,8 +70,6 @@ async def create_user(
         schema.email,
         session
     )
-    hashed_password = bcrypt_context.hash(schema.password)
-    schema = schema.model_copy(update={'password': hashed_password})
     return await user_crud.create(schema, session)
 
 
@@ -82,9 +84,6 @@ async def update_user(
 ):
     """Маршрут для изменения профиля."""
     await check_user_already_exists(schema.username, schema.email, session)
-    if schema.password:
-        hashed_password = bcrypt_context.hash(schema.password)
-        schema = schema.model_copy(update={'password': hashed_password})
     return await user_crud.update(user, schema, session)
 
 
