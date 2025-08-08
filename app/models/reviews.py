@@ -13,14 +13,16 @@ class Review(Base):
 
     grade: Mapped[int]
     text: Mapped[str | None] = mapped_column(Text, default=None)
-    user_username: Mapped[int] = mapped_column(ForeignKey('users.username'))
-    product_slug: Mapped[int] = mapped_column(ForeignKey('products.slug'))
+    user_username: Mapped[str] = mapped_column(ForeignKey('users.username'))
+    product_slug: Mapped[str] = mapped_column(ForeignKey('products.slug'))
 
     user: Mapped['User'] = relationship(
         'User',
+        lazy='selectin',
         back_populates='reviews'
     )
     product: Mapped['Product'] = relationship(
         'Product',
+        lazy='selectin',
         back_populates='reviews'
     )

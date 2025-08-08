@@ -1,32 +1,57 @@
-"""Модуль для создания маршрутов."""
-
-from datetime import timedelta
+"""Модуль создания маршрутов для пользователей."""
 
 from fastapi import APIRouter, Depends, status
-from fastapi.security import (OAuth2PasswordBearer,
-                              OAuth2PasswordRequestForm)
-from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.validators import check_user_already_exists
 from app.core.config import settings
 from app.core.db import db_session
-from app.core.user import (authenticate_user, create_access_token,
-                           get_current_user, get_hashed_password)
+from app.core.security import (
+    authenticate_user,
+    create_access_token,
+    get_current_user
+)
+from app.core.validators import check_user_already_exists
 from app.crud import user_crud
 from app.models import User
-from app.schemas.user import (UserCreateSchema,
-                              UserReadSchema,
-                              UserUpdateSchema)
+from app.schemas import UserCreateSchema, UserReadSchema, UserUpdateSchema
 
 auth_router = APIRouter()
 user_router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/token/')
-bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-
 
 @auth_router.post(
+    '/login/',
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, str]
+)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(db_session)
+):
+    """Маршрут для авторизации пользователя."""
+    user = await authenticate_user(
+        form_data.username,
+        form_data.password,
+        session
+    )
+    token = create_access_token(
+        user.username,
+        expiration_time=settings.TOKEN_EXPIRE
+    )
+    return {
+        'access_token': token,
+        'token_type': 'bearer'
+    }
+
+
+@user_router.get('/me/', response_model=UserReadSchema)
+async def get_user(user: User = Depends(get_current_user)):
+    """Маршрут для просмотра профиля."""
+    return user
+
+
+@user_router.post(
     '/registration/',
     status_code=status.HTTP_201_CREATED,
     response_model=UserReadSchema
@@ -45,36 +70,7 @@ async def create_user(
         schema.email,
         session
     )
-    schema = await get_hashed_password(schema)
     return await user_crud.create(schema, session)
-
-
-@auth_router.post(
-    '/token/',
-    status_code=status.HTTP_201_CREATED
-)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(db_session)
-) -> dict[str, str]:
-    """Маршрут для авторизации пользователя."""
-    user = await authenticate_user(
-        form_data.username,
-        form_data.password,
-        session
-    )
-    token = await create_access_token(
-        user.username,
-        expires_delta=timedelta(minutes=settings.TOKEN_EXPIRE)
-    )
-    return {'access_token': token,
-            'token_type': 'bearer'}
-
-
-@user_router.get('/me/', response_model=UserReadSchema)
-async def get_user(user: User = Depends(get_current_user)):
-    """Маршрут для просмотра профиля."""
-    return user
 
 
 @user_router.patch(
@@ -93,6 +89,7 @@ async def update_user(
 
 @user_router.delete(
     '/me/',
+    status_code=status.HTTP_204_NO_CONTENT,
     response_model=None
 )
 async def delete_user(

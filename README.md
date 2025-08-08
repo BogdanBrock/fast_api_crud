@@ -7,6 +7,7 @@
 [![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-464646?style=flat&logo=PostgreSQL&logoColor=56C0C0&color=008080)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/-Docker-464646?style=flat&logo=Docker&logoColor=56C0C0&color=008080)](https://www.docker.com/)
 [![JWT](https://img.shields.io/badge/-JWT-464646?style=flat&logo=JSON-web-tokens&logoColor=56C0C0&color=008080)](https://jwt.io/)
+[![Pytest](https://img.shields.io/badge/-Pytest-464646?style=flat&logo=Pytest&logoColor=56C0C0&color=008080)](https://docs.pytest.org/)
 
 
 ## Описание проекта fast_api_crud
@@ -36,16 +37,14 @@ git clone git@github.com:BogdanBrock/fast_api_crud.git
 cd docker
 ```
 
-- Выполнить команду с включенным докером:
+- Для запуска проекта нужно выполнить команду с включенным докером:
 ```bash
 docker compose up
 ```
 
-- После того как докер запустился, нужно создать базу 
-данных, миграции уже созданы, важно при этом, чтобы был 
-запущен докер с контейнерами:
+- Для Unix систем (MacOS, Linux) нужно запустить с командой:
 ```bash
-docker compose exec app alembic upgrade head
+sudo docker compose up
 ```
 
 - Все маршруты доступны по адресу:

@@ -1,16 +1,21 @@
-"""Модуль для создания маршрутов."""
+"""Модуль создания маршрутов для категорий."""
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.permissions import RequestContext, is_admin_permission
-from app.api.validators import (check_category_already_exists,
-                                get_category_or_not_found)
 from app.core.db import db_session
-from app.crud.category import category_crud
-from app.schemas.category import (CategoryCreateSchema,
-                                  CategoryReadSchema,
-                                  CategoryUpdateSchema)
+from app.core.validators import (
+    check_cant_change_parent_category,
+    check_category_already_exists,
+    get_category_or_not_found
+)
+from app.crud import category_crud
+from app.schemas import (
+    CategoryCreateSchema,
+    CategoryReadSchema,
+    CategoryUpdateSchema
+)
 
 router = APIRouter()
 
@@ -26,7 +31,7 @@ async def get_categories(
     """
     Маршрут для получения всех категорий.
 
-    Так же можно отсортировать подкатегории по категории.
+    Так же можно отсортировать категории по родительской категории.
     """
     return await category_crud.get_subcategories_by_category_or_all(
         parent_slug,
@@ -72,6 +77,8 @@ async def update_category(
     cxt: RequestContext = Depends(is_admin_permission)
 ):
     """Маршрут для изменения категории."""
+    await check_cant_change_parent_category(category_slug, cxt['session'])
+    await check_category_already_exists(schema.slug, cxt['session'])
     return await category_crud.update(cxt['model_obj'], schema, cxt['session'])
 
 

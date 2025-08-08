@@ -8,7 +8,7 @@ from app.models import User
 
 
 class CRUDUser(CRUDBase):
-    """Класс для созданий CRUD операций для пользователя."""
+    """Класс для создания CRUD операций для пользователя."""
 
     async def get_user_by_username(
         self,

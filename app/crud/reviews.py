@@ -8,7 +8,7 @@ from app.models import Review
 
 
 class CRUDReview(CRUDBase):
-    """Класс для созданий CRUD операций для отзыва."""
+    """Класс для создания CRUD операций для отзыва."""
 
     async def get_reviews_by_product_or_all(
         self,

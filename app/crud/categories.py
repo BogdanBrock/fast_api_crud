@@ -8,7 +8,7 @@ from app.models import Category
 
 
 class CRUDCategory(AbstractCRUDBase):
-    """Класс для созданий CRUD операций для категории."""
+    """Класс для создания CRUD операций для категории."""
 
     async def get_subcategories_by_category_or_all(
         self,
@@ -18,13 +18,25 @@ class CRUDCategory(AbstractCRUDBase):
         """
         Метод для получения всех категорий.
 
-        Так же можно отсортировать подкатегории по категории.
+        Так же можно отсортировать категории по родительской категории.
         """
         query = select(Category)
         if parent_slug:
             query = query.where(Category.parent_slug == parent_slug)
         categories = await session.execute(query)
         return categories.scalars().all()
+
+    async def get_parent_slug(
+        self,
+        parent_slug: str,
+        session: AsyncSession
+    ) -> str:
+        """Метод для получения существующего поля parent_slug."""
+        category = await session.execute(
+            select(Category.parent_slug).
+            where(Category.parent_slug == parent_slug)
+        )
+        return category.scalar()
 
 
 category_crud = CRUDCategory(Category)

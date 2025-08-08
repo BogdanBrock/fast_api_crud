@@ -1,23 +1,15 @@
 """Файл для инициализации пакета."""
 
-from .base import AbstractBaseSchema
-from .category import (
+from .categories import (
     CategoryCreateSchema,
     CategoryReadSchema,
     CategoryUpdateSchema
 )
-from .product import (
+from .mixins import SlugMixin
+from .products import (
     ProductCreateSchema,
     ProductReadSchema,
     ProductUpdateSchema
 )
-from .review import (
-    ReviewCreateSchema,
-    ReviewReadSchema,
-    ReviewUpdateSchema
-)
-from .user import (
-    UserCreateSchema,
-    UserReadSchema,
-    UserUpdateSchema
-)
+from .reviews import ReviewCreateSchema, ReviewReadSchema, ReviewUpdateSchema
+from .users import UserCreateSchema, UserReadSchema, UserUpdateSchema

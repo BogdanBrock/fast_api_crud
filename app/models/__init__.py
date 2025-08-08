@@ -1,6 +1,6 @@
 """Файл для инициализации пакета."""
 
-from .category import Category
-from .product import Product
-from .review import Review
-from .user import RoleEnum, User
+from .categories import Category
+from .products import Product
+from .reviews import Review
+from .users import RoleEnum, User
