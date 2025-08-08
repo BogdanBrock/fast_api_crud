@@ -11,6 +11,7 @@ services:
     env_file: ../.env
     volumes:
       - pg_data:/var/lib/postgresql/data
+    restart: always
 
   app:
     container_name: app
@@ -28,3 +29,4 @@ services:
     ports:
       - 5678:5678
       - 8000:8000
+    restart: always
